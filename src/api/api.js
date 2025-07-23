@@ -1,12 +1,11 @@
 // src/api/api.js
 import axios from 'axios';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL 
-  ? `${import.meta.env.VITE_API_BASE_URL}/api` 
-  : 'http://localhost:5000/api';
+export const BASE_URL = 'https://e-commerce-backend-production-909a.up.railway.app/api';
+
 
 const API = axios.create({
-  baseURL,            // Use env variable for deployment, fallback to localhost for dev
+  baseURL:BASE_URL,            // Use env variable for deployment, fallback to localhost for dev
   withCredentials: true, 
 });
 
