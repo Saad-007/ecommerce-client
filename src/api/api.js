@@ -22,22 +22,21 @@ API.interceptors.request.use((config) => {
 });
 
 // Response interceptor
+
 API.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle specific error cases
     if (error.code === 'ECONNABORTED') {
       console.error('Request timeout');
     }
     
     if (error.response?.status === 401) {
-      // Token expired or invalid
       localStorage.removeItem('token');
+      // Use window.location to ensure full page reload
       window.location.href = '/login?session_expired=true';
     }
     
     return Promise.reject(error);
   }
 );
-
 export default API;

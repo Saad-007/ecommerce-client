@@ -14,6 +14,17 @@ const Login = () => {
   const { handleLogin } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
+   const sessionExpired = searchParams.get('session_expired');
+
+  useEffect(() => {
+    if (sessionExpired) {
+      // Show session expired notification
+      alert('Your session has expired. Please login again.');
+      
+      // Optional: Clear the query parameter from URL
+      window.history.replaceState(null, '', '/login');
+    }
+  }, [sessionExpired]);
 
   // Redirect if already logged in
   useEffect(() => {

@@ -1,8 +1,21 @@
 {
   "rewrites": [
     {
-      "source": "/((?!api|_next|static|favicon.ico|assets).*)",
+      "source": "/login",
       "destination": "/index.html"
+    },
+    {
+      "source": "/login?session_expired=true",
+      "destination": "/index.html"
+    }
+  ],
+  "routes": [
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/.*",
+      "dest": "/index.html"
     }
   ]
 }
