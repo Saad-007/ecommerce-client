@@ -9,10 +9,13 @@ const API = axios.create({
   }
 });
 
-// Example request:
-await API.get('/auth/me');
 // Request interceptor
 API.interceptors.request.use((config) => {
+  // Only prepend /api if not already present and not using full URL
+  if (!config.url.startsWith('http') && !config.url.startsWith('/api')) {
+    config.url = `/api${config.url.startsWith('/') ? '' : '/'}${config.url}`;
+  }
+  
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -23,7 +26,6 @@ API.interceptors.request.use((config) => {
 });
 
 // Response interceptor
-// Response interceptor
 API.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -33,11 +35,11 @@ API.interceptors.response.use(
     
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
-      // Use window.location to ensure full page reload
       window.location.href = '/login?session_expired=true';
     }
     
     return Promise.reject(error);
   }
 );
+
 export default API;
