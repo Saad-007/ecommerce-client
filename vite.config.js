@@ -1,11 +1,12 @@
-// vite.config.js (final working version)
-import { defineConfig } from 'vite'
-import react from '@vitejs/plugin-react'
-import tailwindcss from '@tailwindcss/vite'
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
 
 export default defineConfig({
-  base: './',
-  plugins: [react(), tailwindcss()],
+  plugins: [react()],
+  base: '', // ✅ Leave it empty for Vercel deployment
+  build: {
+    outDir: 'dist'
+  },
   server: {
     proxy: {
       '/api': {
@@ -15,14 +16,5 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
-  },
-  build: {
-    outDir: 'dist',
-    assetsDir: 'assets',
-    rollupOptions: {
-      output: {
-        assetFileNames: 'assets/[name].[hash].[ext]'
-      }
-    }
   }
-})
+});

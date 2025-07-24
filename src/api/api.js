@@ -22,7 +22,7 @@ API.interceptors.request.use((config) => {
 });
 
 // Response interceptor
-
+// Response interceptor
 API.interceptors.response.use(
   (response) => response,
   (error) => {
