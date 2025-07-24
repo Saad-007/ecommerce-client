@@ -1,14 +1,11 @@
 import { useAuth } from '../context/AuthContext';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import LoadingSpinner from './LoadingSpinner'; // Create this component
 
 const ProtectedRoute = ({ adminOnly = false }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  if (loading) {
-    return <LoadingSpinner fullPage />; // Show loading state
-  }
+ if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
 
   if (!user) {
     // Redirect to login with return location
