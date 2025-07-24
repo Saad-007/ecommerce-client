@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-baseURL: import.meta.env.VITE_API_BASE_URL, // ✅ use env var directly
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -9,6 +9,8 @@ baseURL: import.meta.env.VITE_API_BASE_URL, // ✅ use env var directly
   }
 });
 
+// Example request:
+await API.get('/auth/me');
 // Request interceptor
 API.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
