@@ -25,7 +25,15 @@ const Login = () => {
       window.history.replaceState(null, '', '/login');
     }
   }, [sessionExpired]);
-
+// Modify the session expired handling
+useEffect(() => {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('session_expired')) {
+    // Show your alert/message here
+    params.delete('session_expired');
+    window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
+  }
+}, []);
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
