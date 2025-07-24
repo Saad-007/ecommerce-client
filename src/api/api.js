@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
+  baseURL: import.meta.env.VITE_API_BASE_URL, // Already includes /api
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
@@ -9,13 +9,8 @@ const API = axios.create({
   }
 });
 
-// Request interceptor
+// ✅ Remove the URL rewriting logic — it's not needed
 API.interceptors.request.use((config) => {
-  // Only prepend /api if not already present and not using full URL
-  if (!config.url.startsWith('http') && !config.url.startsWith('/api')) {
-    config.url = `/api${config.url.startsWith('/') ? '' : '/'}${config.url}`;
-  }
-  
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -32,12 +27,12 @@ API.interceptors.response.use(
     if (error.code === 'ECONNABORTED') {
       console.error('Request timeout');
     }
-    
+
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       window.location.href = '/login?session_expired=true';
     }
-    
+
     return Promise.reject(error);
   }
 );
