@@ -3,7 +3,7 @@ import axios from 'axios';
 const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173';
 
 const API = axios.create({
-  baseURL: '/auth', // Your backend proxy or direct route
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
