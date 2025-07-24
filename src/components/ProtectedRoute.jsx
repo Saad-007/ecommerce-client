@@ -3,10 +3,8 @@ import { useAuth } from '../context/AuthContext';
 import { Navigate, Outlet } from 'react-router-dom';
 
 const ProtectedRoute = ({ adminOnly = false }) => {
-  const { user, isAdmin, loading } = useAuth();
-
-  if (loading) return null; // or return a spinner/loading component
-
+  const { user, isAdmin } = useAuth();
+  if (loading) return null; // or a loader
   if (!user) {
     return <Navigate to="/login" replace />;
   }
