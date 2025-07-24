@@ -10,30 +10,27 @@ const Login = () => {
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { login, user } = useAuth();
   const { handleLogin } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
-   const sessionExpired = searchParams.get('session_expired');
 
+  // Get session_expired query param safely
+  const sessionExpired = new URLSearchParams(location.search).get('session_expired');
+
+  // Show alert once if session expired, then remove query param
   useEffect(() => {
     if (sessionExpired) {
-      // Show session expired notification
       alert('Your session has expired. Please login again.');
-      
-      // Optional: Clear the query parameter from URL
-      window.history.replaceState(null, '', '/login');
+      const params = new URLSearchParams(location.search);
+      params.delete('session_expired');
+      const newSearch = params.toString();
+      const newPath = location.pathname + (newSearch ? `?${newSearch}` : '');
+      window.history.replaceState(null, '', newPath);
     }
-  }, [sessionExpired]);
-// Modify the session expired handling
-useEffect(() => {
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('session_expired')) {
-    // Show your alert/message here
-    params.delete('session_expired');
-    window.history.replaceState({}, '', `${window.location.pathname}?${params}`);
-  }
-}, []);
+  }, [sessionExpired, location]);
+
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
@@ -42,19 +39,20 @@ useEffect(() => {
   }, [user, navigate, location]);
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  setIsSubmitting(true);
+    e.preventDefault();
+    setError('');
+    setIsSubmitting(true);
 
-  try {
-    const token = await login(email, password); // ✅ assume it returns token
-    handleLogin(token); // ✅ load cart from backend
-  } catch (err) {
-    setError(err.message || 'Failed to login. Please check your credentials.');
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+    try {
+      const token = await login(email, password);
+      handleLogin(token);
+    } catch (err) {
+      setError(err.message || 'Failed to login. Please check your credentials.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
 
 
   return (
