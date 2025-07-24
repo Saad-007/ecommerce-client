@@ -10,6 +10,10 @@
     {
       "source": "/auth/(.*)",
       "destination": "https://e-commerce-backend-production-36dc.up.railway.app/api/auth/$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
