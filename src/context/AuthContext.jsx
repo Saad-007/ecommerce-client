@@ -73,16 +73,17 @@ const login = async (email, password) => {
 // Add this to your AuthContext
 const checkAuth = async () => {
   try {
-    const { data } = await API.get("/auth/check", { withCredentials: true });
+    const { data } = await API.get('/auth/check');
     setUser(data.user);
     return data.user;
-  } catch {
+  } catch (err) {
+    // Clear any invalid auth state
     setUser(null);
     return null;
   }
 };
 
-// Call on mount
+// Call this on app load
 useEffect(() => {
   checkAuth();
 }, []);
