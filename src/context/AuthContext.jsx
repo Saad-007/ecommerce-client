@@ -50,29 +50,48 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    setError(null);
-    try {
-      const res = await API.post(
-        "/auth/login",
-        { email, password },
-        { withCredentials: true }
-      );
+  setError(null);
+  try {
+    const res = await API.post(
+      "/auth/login", 
+      { email, password },
+      { withCredentials: true }
+    );
 
-      localStorage.setItem("token", res.data.token);
-      setUser(res.data.data.user);
+    // Remove localStorage token storage
+    // localStorage.setItem("token", res.data.token); ❌ Remove this line
+    
+    // Verify auth status after login
+    const authCheck = await API.get("/auth/check", { withCredentials: true });
+    setUser(authCheck.data.user);
 
-      const redirectPath =
-        res.data.data.user.role === "admin"
-          ? "/admin/dashboard"
-          : location.state?.from?.pathname || "/";
+    const redirectPath = 
+      authCheck.data.user.role === "admin"
+        ? "/admin/dashboard"
+        : location.state?.from?.pathname || "/";
 
-      navigate(redirectPath);
-      return res.data.data.user;
-    } catch (err) {
-      setError(err.response?.data?.message || "Login failed");
-      throw err;
-    }
-  };
+    navigate(redirectPath);
+    return authCheck.data.user;
+  } catch (err) {
+    setError(err.response?.data?.message || "Login failed");
+    throw err;
+  }
+};// Add this to your auth context
+const checkAuth = async () => {
+  try {
+    const res = await API.get("/auth/check", { withCredentials: true });
+    setUser(res.data.user);
+    return res.data.user;
+  } catch (err) {
+    setUser(null);
+    return null;
+  }
+};
+
+// Call this on app load
+useEffect(() => {
+  checkAuth();
+}, []);
 
   const logout = async () => {
     try {

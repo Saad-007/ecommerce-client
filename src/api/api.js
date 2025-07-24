@@ -4,21 +4,18 @@ const FRONTEND_URL = import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173
 
 const API = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  withCredentials: false,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
     'Accept': 'application/json'
   }
 });
 
+// Remove localStorage token handling completely
 API.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
+  // No token needed - cookies are sent automatically
   return config;
 });
-
 API.interceptors.response.use(
   response => response,
   error => {
