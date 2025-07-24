@@ -1,8 +1,9 @@
 {
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/auth/(.*)",
-      "destination": "https://e-commerce-backend-production-36dc.up.railway.app/api/auth/$1"
+      "src": "package.json",
+      "use": "@vercel/static-build"
     }
   ],
   "routes": [
