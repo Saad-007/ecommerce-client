@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const res = await API.get("/api/auth/me", { withCredentials: true });
+        const res = await API.get("auth/me", { withCredentials: true });
         setUser(res.data.data.user);
       } catch (err) {
         console.warn(
