@@ -11,14 +11,5 @@
       "source": "/auth/(.*)",
       "destination": "https://e-commerce-backend-production-36dc.up.railway.app/api/auth/$1"
     }
-  ],
-  "routes": [
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.*",
-      "dest": "/index.html"
-    }
   ]
 }
