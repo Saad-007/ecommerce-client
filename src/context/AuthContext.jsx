@@ -12,6 +12,7 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
+const { clearCart } = useCart(); // ✅ called once, hook-style
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -98,7 +99,6 @@ useEffect(() => {
 
 
 
-const { clearCart } = useCart(); // ✅ called once, hook-style
 
 const logout = async () => {
   try {
