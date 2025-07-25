@@ -11,6 +11,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { clearCart } = useCart(); // Add this line inside the component
   const location = useLocation();
 
   useEffect(() => {

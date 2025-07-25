@@ -38,7 +38,7 @@ const Navbar = () => {
   const [mobileCatOpen, setMobileCatOpen] = useState(false);
   const { user, isAdmin, logout } = useAuth();
   const { wishlist } = useWishlist();
-  const { cart,clearCart } = useCart();
+  const { cart} = useCart();
   const { products } = useProducts();
   const navigate = useNavigate();
   const [suggestions, setSuggestions] = useState([]);
@@ -52,8 +52,6 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await logout();     // ✅ only handles auth state
-    clearCart();        // ✅ clear cart after auth reset
-    localStorage.removeItem("guestCart");
   };
   useEffect(() => {
     if (location.pathname !== "/search") {
