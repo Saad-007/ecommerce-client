@@ -67,48 +67,56 @@ export const CartProvider = ({ children }) => {
     }
   }, [cart, user, token]);
 
-  const addToCart = (product) => {
-    setCart(prevCart => {
-      // Check if product already exists in cart
-      const existingItemIndex = prevCart.findIndex(
-        item => item.productId === product.productId || item._id === product._id
-      );
+  // src/context/CartContext.js
+const addToCart = (product) => {
+  setCart((prevCart) => {
+    // Normalize the product ID (use _id if available, otherwise id)
+    const productId = product._id || product.id;
+    
+    if (!productId) {
+      console.error("Product missing ID:", product);
+      return prevCart;
+    }
 
-      let updatedCart;
-      
-      if (existingItemIndex >= 0) {
-        // If exists, increment quantity
-        updatedCart = [...prevCart];
-        updatedCart[existingItemIndex] = {
-          ...updatedCart[existingItemIndex],
-          quantity: updatedCart[existingItemIndex].quantity + 1
-        };
-      } else {
-        // If new, add to cart with quantity 1
-        updatedCart = [...prevCart, { ...product, quantity: 1 }];
-      }
+    // Check if product already exists in cart
+    const existingIndex = prevCart.findIndex(
+      (item) => (item._id || item.id) === productId
+    );
 
+    if (existingIndex >= 0) {
+      // If exists, increment quantity
+      const updatedCart = [...prevCart];
+      updatedCart[existingIndex] = {
+        ...updatedCart[existingIndex],
+        quantity: updatedCart[existingIndex].quantity + 1
+      };
       return updatedCart;
-    });
-  };
+    } else {
+      // If new, add to cart with quantity 1
+      return [...prevCart, { 
+        ...product,
+        _id: productId, // Ensure consistent ID field
+        quantity: 1 
+      }];
+    }
+  });
+};
 
-  const updateQuantity = (id, delta) => {
-    setCart(prevCart => {
-      const updatedCart = prevCart.map(item =>
-        item.productId === id || item._id === id
-          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-          : item
-      );
-      return updatedCart;
-    });
-  };
+const updateQuantity = (id, delta) => {
+  setCart((prevCart) =>
+    prevCart.map((item) =>
+      (item._id === id || item.id === id)
+        ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+        : item
+    )
+  );
+};
 
-  const removeFromCart = (id) => {
-    setCart(prevCart => prevCart.filter(
-      item => item.productId !== id && item._id !== id
-    ));
-  };
-
+const removeFromCart = (id) => {
+  setCart((prevCart) =>
+    prevCart.filter((item) => item._id !== id && item.id !== id)
+  );
+};
   const clearCart = () => {
     setCart([]);
   };
