@@ -2,6 +2,7 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import API from "../api/api";
+import { useCart } from "./CartContext";
 
 const AuthContext = createContext();
 
@@ -97,25 +98,23 @@ useEffect(() => {
 
 
 
-  const logout = async () => {
-    try {
-      await API.get("/auth/logout");
-      localStorage.removeItem("token");
-      setUser(null);
+const { clearCart } = useCart(); // ✅ called once, hook-style
 
-      try {
-        const { clearCart } = require("./CartContext").useCart();
-        clearCart();
-        localStorage.removeItem("guestCart");
-      } catch (err) {
-        console.warn("CartContext not ready:", err.message);
-      }
+const logout = async () => {
+  try {
+    await API.get("/auth/logout");
+    localStorage.removeItem("token");
+    setUser(null);
 
-      navigate("/login");
-    } catch (err) {
-      console.error("Logout error:", err);
-    }
-  };
+    clearCart(); // ✅ clear the cart on logout
+    localStorage.removeItem("guestCart");
+
+    navigate("/login");
+  } catch (err) {
+    console.error("Logout error:", err);
+  }
+};
+
 
   return (
     <AuthContext.Provider
