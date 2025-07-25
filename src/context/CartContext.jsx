@@ -91,32 +91,40 @@ useEffect(() => {
 }, [user]);
 
   useEffect(() => {
-    const handleLoginMerge = async () => {
-      const guestCart = localStorage.getItem('guestCart');
-      if (user && user.role !== "admin" && guestCart) {
-        try {
-          const parsedGuestCart = JSON.parse(guestCart);
+  const handleLoginMerge = async () => {
+    const guestCart = localStorage.getItem("guestCart");
 
-          const mergedCart = [...cart, ...parsedGuestCart].reduce((acc, item) => {
-            const existing = acc.find(i => i.id === item.id);
-            if (existing) {
-              existing.quantity += item.quantity;
-            } else {
-              acc.push({ ...item });
-            }
-            return acc;
-          }, []);
+    if (
+      user &&
+      user.role !== "admin" &&
+      guestCart &&
+      cart.length > 0 &&
+      !hasMergedCart
+    ) {
+      try {
+        const parsedGuestCart = JSON.parse(guestCart);
 
-          setCart(mergedCart);
-          localStorage.removeItem('guestCart');
-        } catch (error) {
-          console.error("Cart merge error:", error);
-        }
+        const mergedCart = [...cart, ...parsedGuestCart].reduce((acc, item) => {
+          const existing = acc.find((i) => i.id === item.id);
+          if (existing) {
+            existing.quantity += item.quantity;
+          } else {
+            acc.push({ ...item });
+          }
+          return acc;
+        }, []);
+
+        setHasMergedCart(true);
+        setCart(mergedCart);
+        localStorage.removeItem("guestCart");
+      } catch (error) {
+        console.error("Cart merge error:", error);
       }
-    };
+    }
+  };
 
-    handleLoginMerge();
-  }, [user]);
+  handleLoginMerge();
+}, [user, cart, hasMergedCart]);
 
   useEffect(() => {
     if (user !== undefined) {
@@ -144,9 +152,9 @@ useEffect(() => {
       const token = localStorage.getItem("token");
 
       if (token && user && user.role !== "admin") {
-        setCart(prev => prev.filter(item => item.id !== id));
+       const updatedCart = cart.filter(item => item.id !== id);
+setCart(updatedCart);
 
-        const updatedCart = cart.filter(item => item.id !== id);
         const formattedCart = updatedCart.map(item => ({
           productId: item._id || item.id,
           quantity: item.quantity

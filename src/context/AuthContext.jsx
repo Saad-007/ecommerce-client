@@ -65,6 +65,10 @@ if (!fetchedUser) {
 
 setUser(fetchedUser);
 
+// ✅ Fetch and set user's saved cart
+const cartRes = await API.get("/cart");
+setCart(cartRes.data.cart); // if using context: dispatch({ type: "SET_CART", payload: cartRes.data.cart })
+
 const redirectPath = fetchedUser.role === "admin"
   ? "/admin/dashboard"
   : location.state?.from?.pathname || "/";
