@@ -1,258 +1,107 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { getDiscountedPrice } from "../utils/Prizeutils";
+// context/CartContext.js
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 
 const CartContext = createContext();
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-export function CartProvider({ children }) {
+export const useCart = () => useContext(CartContext);
+
+export const CartProvider = ({ children }) => {
+  const { user, token } = useAuth();
   const [cart, setCart] = useState([]);
-  const { user } = useAuth();
-  const [hasMergedCart, setHasMergedCart] = useState(false);
 
- const loadCart = async () => {
-  const token = localStorage.getItem("token");
+  const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-  if (token && user && user.role !== "admin") {
-    try {
-      const res = await fetch(`${API_BASE_URL}/cart`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!res.ok) throw new Error("Failed to load cart");
-
-      const data = await res.json();
-
-      if (data.cart) {
-        const normalized = data.cart.map((item) => ({
-          ...item.productId,
-          quantity: item.quantity,
-          id: item.productId._id,
-        }));
-        setCart(normalized);
-      } else {
-        setCart([]); // even if empty
-      }
-    } catch (error) {
-      console.error("Cart load error:", error);
-    }
-  } else {
-    // Load guest cart
-    const guestCart = localStorage.getItem("guestCart");
-    if (guestCart) {
-      try {
-        setCart(JSON.parse(guestCart));
-      } catch {
-        setCart([]);
-      }
-    }
-  }
-};
-const saveCartToBackend = async (newCart = cart) => {
-  const token = localStorage.getItem("token");
-  if (!token || !user || user.role === "admin") return;
-
-  try {
-    const formattedCart = newCart.map((item) => ({
-      productId: item._id || item.id,
-      quantity: item.quantity,
-    }));
-
-    await fetch(`${API_BASE_URL}/cart`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ cart: formattedCart }),
-    });
-  } catch (err) {
-    console.error("Cart save error:", err);
-  }
-};
-
+  // ✅ Load cart from backend on login
   useEffect(() => {
-  const token = localStorage.getItem("token");
+    const fetchCart = async () => {
+      if (!user || !token) return;
 
-  if (user && token && user.role !== "admin") {
-    const saveCart = async () => {
       try {
-        const formattedCart = cart.map((item) => ({
-          productId: item._id || item.id,
-          quantity: item.quantity,
-        }));
-
-        await fetch(`${API_BASE_URL}/cart`, {
-          method: "POST",
+        const res = await fetch(`${API}/cart`, {
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ cart: formattedCart }),
         });
+        const data = await res.json();
+        if (res.ok) {
+          setCart(data.cart || []);
+        } else {
+          console.error("Cart load failed:", data.message);
+        }
       } catch (err) {
-        console.error("Cart save error:", err);
+        console.error("Cart fetch error:", err);
       }
     };
 
-    const timeout = setTimeout(saveCart, 500);
-    return () => clearTimeout(timeout);
-  } else {
-    localStorage.setItem("guestCart", JSON.stringify(cart));
-  }
-}, [cart, user]);
+    fetchCart();
+  }, [user, token]);
 
-
-useEffect(() => {
-  if (user === null) {
-    setCart([]); // don't remove guestCart; it's for guests
-  }
-}, [user]);
-
- useEffect(() => {
-  const mergeAndSaveCart = async () => {
-    const token = localStorage.getItem("token");
-    const guestCartRaw = localStorage.getItem("guestCart");
-
-    if (!user || user.role === "admin" || hasMergedCart) return;
-
-    // 1. Load backend cart
-    let backendCart = [];
-    try {
-      const res = await fetch(`${API_BASE_URL}/cart`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        backendCart = (data.cart || []).map((item) => ({
-          ...item.productId,
-          quantity: item.quantity,
-          id: item.productId._id,
-        }));
-      }
-    } catch (err) {
-      console.error("Failed to load backend cart:", err);
-    }
-
-    // 2. Merge with guest cart
-    let guestCart = [];
-    try {
-      if (guestCartRaw) guestCart = JSON.parse(guestCartRaw);
-    } catch {}
-
-    const mergedCart = [...backendCart, ...guestCart].reduce((acc, item) => {
-      const existing = acc.find((i) => i.id === item.id);
-      if (existing) {
-        existing.quantity += item.quantity;
-      } else {
-        acc.push({ ...item });
-      }
-      return acc;
-    }, []);
-
-    // 3. Save merged cart
-    setCart(mergedCart);
-    await saveCartToBackend(mergedCart);
-
-    // 4. Cleanup
-    localStorage.removeItem("guestCart");
-    setHasMergedCart(true);
-  };
-
-  mergeAndSaveCart();
-}, [user, hasMergedCart]);
-
-const addToCart = (product) => {
-  setCart((prev) => {
-    const exists = prev.find((item) => item.id === product.id);
-    const updatedCart = exists
-      ? prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        )
-      : [...prev, { ...product, quantity: 1 }];
-
-    // 🔁 Save to backend
-    saveCartToBackend(updatedCart);
-    return updatedCart;
-  });
-};
-
-  const removeFromCart = async (id) => {
-    try {
-      const token = localStorage.getItem("token");
-
-      if (token && user && user.role !== "admin") {
-       const updatedCart = cart.filter(item => item.id !== id);
-setCart(updatedCart);
-
-        const formattedCart = updatedCart.map(item => ({
-          productId: item._id || item.id,
-          quantity: item.quantity
-        }));
-
-        const res = await fetch(`${API_BASE_URL}/cart`, {
+  // ✅ Sync local cart changes to backend
+  const syncCart = async (updatedCart) => {
+    setCart(updatedCart);
+    if (user && token) {
+      try {
+        await fetch(`${API}/cart`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ cart: formattedCart }),
+          body: JSON.stringify({ cart: updatedCart }),
         });
-
-        if (!res.ok) {
-          loadCart();
-          throw new Error("Failed to update cart on server");
-        }
-      } else {
-        setCart(prev => prev.filter(item => item.id !== id));
+      } catch (err) {
+        console.error("Sync cart error:", err);
       }
-    } catch (error) {
-      console.error("Remove from cart error:", error);
-      loadCart();
     }
   };
 
-  const updateQuantity = (id, amount) => {
-    setCart((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, quantity: item.quantity + amount } : item
-      )
+  const addToCart = (product) => {
+    const existing = cart.find((item) => item.productId === product.productId);
+    let updated;
+
+    if (existing) {
+      updated = cart.map((item) =>
+        item.productId === product.productId
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      );
+    } else {
+      updated = [...cart, { ...product, quantity: 1 }];
+    }
+
+    syncCart(updated);
+  };
+
+  const updateQuantity = (id, delta) => {
+    const updated = cart.map((item) =>
+      item.productId === id
+        ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+        : item
     );
+    syncCart(updated);
+  };
+
+  const removeFromCart = (id) => {
+    const updated = cart.filter((item) => item.productId !== id);
+    syncCart(updated);
   };
 
   const clearCart = () => {
-  setCart([]);
-  saveCartToBackend([]);
-};
-
-
-  const total = cart.reduce((sum, item) => {
-    const discounted = getDiscountedPrice(item.price, item.off);
-    return sum + discounted * item.quantity;
-  }, 0);
+    syncCart([]);
+  };
 
   return (
     <CartContext.Provider
       value={{
         cart,
         addToCart,
-        removeFromCart,
         updateQuantity,
+        removeFromCart,
         clearCart,
-        total,
       }}
     >
       {children}
     </CartContext.Provider>
   );
-}
-
-export const useCart = () => useContext(CartContext);
+};
