@@ -56,7 +56,7 @@ const login = async (email, password) => {
     await API.post("/auth/login", { email, password }, { withCredentials: true });
     
     // Verify auth status
-    const { data } = await API.get("/auth/check", { withCredentials: true });
+    const { data } = await API.get("/auth/me", { withCredentials: true });
     setUser(data.user);
 
     const redirectPath = data.user.role === "admin"
@@ -73,7 +73,7 @@ const login = async (email, password) => {
 // Add this to your AuthContext
 const checkAuth = async () => {
   try {
-    const { data } = await API.get('/auth/check');
+    const { data } = await API.get('/auth/me');
     setUser(data.user);
     return data.user;
   } catch (err) {
