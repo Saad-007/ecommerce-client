@@ -1,3 +1,4 @@
+// src/context/CartContext.js
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 
@@ -67,34 +68,45 @@ export const CartProvider = ({ children }) => {
   }, [cart, user, token]);
 
   const addToCart = (product) => {
-    const existing = cart.find((item) => item.productId === product.productId);
-    let updated;
-
-    if (existing) {
-      updated = cart.map((item) =>
-        item.productId === product.productId
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
+    setCart(prevCart => {
+      // Check if product already exists in cart
+      const existingItemIndex = prevCart.findIndex(
+        item => item.productId === product.productId || item._id === product._id
       );
-    } else {
-      updated = [...cart, { ...product, quantity: 1 }];
-    }
 
-    setCart(updated);
+      let updatedCart;
+      
+      if (existingItemIndex >= 0) {
+        // If exists, increment quantity
+        updatedCart = [...prevCart];
+        updatedCart[existingItemIndex] = {
+          ...updatedCart[existingItemIndex],
+          quantity: updatedCart[existingItemIndex].quantity + 1
+        };
+      } else {
+        // If new, add to cart with quantity 1
+        updatedCart = [...prevCart, { ...product, quantity: 1 }];
+      }
+
+      return updatedCart;
+    });
   };
 
   const updateQuantity = (id, delta) => {
-    const updated = cart.map((item) =>
-      item.productId === id
-        ? { ...item, quantity: Math.max(1, item.quantity + delta) }
-        : item
-    );
-    setCart(updated);
+    setCart(prevCart => {
+      const updatedCart = prevCart.map(item =>
+        item.productId === id || item._id === id
+          ? { ...item, quantity: Math.max(1, item.quantity + delta) }
+          : item
+      );
+      return updatedCart;
+    });
   };
 
   const removeFromCart = (id) => {
-    const updated = cart.filter((item) => item.productId !== id);
-    setCart(updated);
+    setCart(prevCart => prevCart.filter(
+      item => item.productId !== id && item._id !== id
+    ));
   };
 
   const clearCart = () => {
