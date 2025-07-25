@@ -46,13 +46,17 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const location = useLocation();
-  
+  const { clearCart } = useCart(); // Add this line inside the component
+
 
 
 
   const handleLogout = async () => {
-    await logout();     // ✅ only handles auth state
-  };
+  await logout();
+  clearCart();
+  localStorage.removeItem("guestCart");
+};
+
   useEffect(() => {
     if (location.pathname !== "/search") {
       setSearchQuery("");

@@ -2,7 +2,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import API from "../api/api";
-import { useCart } from "./CartContext";
 
 const AuthContext = createContext();
 
@@ -11,7 +10,6 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
-  const { clearCart } = useCart(); // Add this line inside the component
   const location = useLocation();
 
   useEffect(() => {
