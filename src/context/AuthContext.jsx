@@ -104,7 +104,6 @@ const logout = async () => {
     localStorage.removeItem("token");
     setUser(null);
 
-    clearCart(); // ✅ clear the cart on logout
     localStorage.removeItem("guestCart");
 
     navigate("/login");
