@@ -28,11 +28,14 @@ export default function ProductCard({ product, isInWishlist = false }) {
     status,
     reviews = []
   } = product;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/reviews?productId=${product.id}`);
+        const res = await fetch(`${API_BASE_URL}/reviews?productId=${id}`, {
+        credentials: "include", // if your backend requires auth cookies
+      });
         const data = await res.json();
         const count = data.length;
         const avg = count
