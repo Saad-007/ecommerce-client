@@ -38,7 +38,7 @@ const Navbar = () => {
   const [mobileCatOpen, setMobileCatOpen] = useState(false);
   const { user, isAdmin, logout } = useAuth();
   const { wishlist } = useWishlist();
-  const { cart } = useCart();
+  const { cart,clearCart } = useCart();
   const { products } = useProducts();
   const navigate = useNavigate();
   const [suggestions, setSuggestions] = useState([]);

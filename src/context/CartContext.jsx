@@ -10,82 +10,85 @@ export function CartProvider({ children }) {
   const { user } = useAuth();
   const [hasMergedCart, setHasMergedCart] = useState(false);
 
-  const loadCart = async () => {
-    const token = localStorage.getItem("token");
+ const loadCart = async () => {
+  const token = localStorage.getItem("token");
 
-    if (token && user && user.role !== "admin") {
+  if (token && user && user.role !== "admin") {
+    try {
+      const res = await fetch(`${API_BASE_URL}/cart`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!res.ok) throw new Error("Failed to load cart");
+
+      const data = await res.json();
+
+      if (data.cart) {
+        const normalized = data.cart.map((item) => ({
+          ...item.productId,
+          quantity: item.quantity,
+          id: item.productId._id,
+        }));
+        setCart(normalized);
+      } else {
+        setCart([]); // even if empty
+      }
+    } catch (error) {
+      console.error("Cart load error:", error);
+    }
+  } else {
+    // Load guest cart
+    const guestCart = localStorage.getItem("guestCart");
+    if (guestCart) {
       try {
-        const res = await fetch(`${API_BASE_URL}/cart`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          },
-        });
-
-        if (!res.ok) throw new Error("Failed to load cart");
-
-        const data = await res.json();
-
-        if (data.cart) {
-          const normalized = data.cart.map(item => ({
-            ...item.productId,
-            quantity: item.quantity,
-            id: item.productId._id
-          }));
-          setCart(normalized);
-        }
-      } catch (error) {
-        console.error("Cart load error:", error);
-      }
-    } else {
-      const guestCart = localStorage.getItem('guestCart');
-      if (guestCart) {
         setCart(JSON.parse(guestCart));
+      } catch {
+        setCart([]);
       }
     }
-  };
+  }
+};
 
   useEffect(() => {
-    if (cart.length === 0) return;
+  const token = localStorage.getItem("token");
 
-    const token = localStorage.getItem("token");
+  if (user && token && user.role !== "admin") {
+    const saveCart = async () => {
+      try {
+        const formattedCart = cart.map((item) => ({
+          productId: item._id || item.id,
+          quantity: item.quantity,
+        }));
 
-    if (token && user && user.role !== "admin") {
-      const saveCart = async () => {
-        try {
-          const formattedCart = cart.map(item => ({
-            productId: item._id || item.id,
-            quantity: item.quantity
-          }));
+        await fetch(`${API_BASE_URL}/cart`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ cart: formattedCart }),
+        });
+      } catch (err) {
+        console.error("Cart save error:", err);
+      }
+    };
 
-          const res = await fetch(`${API_BASE_URL}/cart`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ cart: formattedCart }),
-          });
+    const timeout = setTimeout(saveCart, 500);
+    return () => clearTimeout(timeout);
+  } else {
+    localStorage.setItem("guestCart", JSON.stringify(cart));
+  }
+}, [cart, user]);
 
-          if (!res.ok) throw new Error("Cart save failed");
-        } catch (error) {
-          console.error("Cart save error:", error);
-        }
-      };
 
-      const timer = setTimeout(saveCart, 500);
-      return () => clearTimeout(timer);
-    } else {
-      localStorage.setItem('guestCart', JSON.stringify(cart));
-    }
-  }, [cart, user]);
-
-  useEffect(() => {
-    if (user === null) {
-      setCart([]);
-      localStorage.removeItem("guestCart");
-    }
-  }, [user]);
+useEffect(() => {
+  if (user === null) {
+    setCart([]); // don't remove guestCart; it's for guests
+  }
+}, [user]);
 
   useEffect(() => {
     const handleLoginMerge = async () => {
