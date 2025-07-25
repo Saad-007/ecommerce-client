@@ -12,7 +12,6 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
-const { clearCart } = useCart(); // ✅ called once, hook-style
 
   useEffect(() => {
     const initializeAuth = async () => {
@@ -99,9 +98,10 @@ useEffect(() => {
 
 
 
-
 const logout = async () => {
   try {
+    const { clearCart } = useCart(); // ✅ move inside function
+
     await API.get("/auth/logout");
     localStorage.removeItem("token");
     setUser(null);
@@ -114,6 +114,7 @@ const logout = async () => {
     console.error("Logout error:", err);
   }
 };
+
 
 
   return (
