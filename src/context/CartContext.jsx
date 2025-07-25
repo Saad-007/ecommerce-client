@@ -1,4 +1,3 @@
-// context/CartContext.js
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 
@@ -12,49 +11,60 @@ export const CartProvider = ({ children }) => {
 
   const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-  // ✅ Load cart from backend on login
+  // Load cart from backend on login or local storage on initial load
   useEffect(() => {
-    const fetchCart = async () => {
-      if (!user || !token) return;
-
-      try {
-        const res = await fetch(`${API}/cart`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const data = await res.json();
-        if (res.ok) {
-          setCart(data.cart || []);
-        } else {
-          console.error("Cart load failed:", data.message);
+    const loadCart = async () => {
+      if (user && token) {
+        // Load from backend for logged in users
+        try {
+          const res = await fetch(`${API}/cart`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+          const data = await res.json();
+          if (res.ok) {
+            setCart(data.cart || []);
+          }
+        } catch (err) {
+          console.error("Cart load failed:", err);
         }
-      } catch (err) {
-        console.error("Cart fetch error:", err);
+      } else {
+        // Load from localStorage for guests
+        const guestCart = localStorage.getItem("guestCart");
+        if (guestCart) {
+          setCart(JSON.parse(guestCart));
+        }
       }
     };
 
-    fetchCart();
+    loadCart();
   }, [user, token]);
 
-  // ✅ Sync local cart changes to backend
-  const syncCart = async (updatedCart) => {
-    setCart(updatedCart);
+  // Save cart to appropriate location whenever it changes
+  useEffect(() => {
     if (user && token) {
-      try {
-        await fetch(`${API}/cart`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ cart: updatedCart }),
-        });
-      } catch (err) {
-        console.error("Sync cart error:", err);
-      }
+      // Sync to backend for logged in users
+      const syncCart = async () => {
+        try {
+          await fetch(`${API}/cart`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ cart }),
+          });
+        } catch (err) {
+          console.error("Cart sync failed:", err);
+        }
+      };
+      syncCart();
+    } else {
+      // Save to localStorage for guests
+      localStorage.setItem("guestCart", JSON.stringify(cart));
     }
-  };
+  }, [cart, user, token]);
 
   const addToCart = (product) => {
     const existing = cart.find((item) => item.productId === product.productId);
@@ -70,7 +80,7 @@ export const CartProvider = ({ children }) => {
       updated = [...cart, { ...product, quantity: 1 }];
     }
 
-    syncCart(updated);
+    setCart(updated);
   };
 
   const updateQuantity = (id, delta) => {
@@ -79,16 +89,16 @@ export const CartProvider = ({ children }) => {
         ? { ...item, quantity: Math.max(1, item.quantity + delta) }
         : item
     );
-    syncCart(updated);
+    setCart(updated);
   };
 
   const removeFromCart = (id) => {
     const updated = cart.filter((item) => item.productId !== id);
-    syncCart(updated);
+    setCart(updated);
   };
 
   const clearCart = () => {
-    syncCart([]);
+    setCart([]);
   };
 
   return (

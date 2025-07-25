@@ -71,6 +71,7 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [scrolled]);
+    const cartCount = user ? cart.reduce((total, item) => total + item.quantity, 0) : 0;
 
   const categories = [
     {
@@ -373,9 +374,9 @@ const Navbar = () => {
               aria-label="Shopping Cart"
             >
               <FiShoppingCart size={20} />
-              {cart.length > 0 && (
+              {user && cartCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cart.length}
+                  {cartCount}
                 </span>
               )}
             </Link>
@@ -401,9 +402,9 @@ const Navbar = () => {
             </Link>
             <Link to="/cart" className="relative text-gray-500">
               <FiShoppingCart size={20} />
-              {cart.length > 0 && (
+              {user && cartCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  {cart.length}
+                  {cartCount}
                 </span>
               )}
             </Link>
