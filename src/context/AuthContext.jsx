@@ -100,7 +100,6 @@ useEffect(() => {
 
 const logout = async () => {
   try {
-    const { clearCart } = useCart(); // ✅ move inside function
 
     await API.get("/auth/logout");
     localStorage.removeItem("token");

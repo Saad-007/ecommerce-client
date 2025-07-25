@@ -46,7 +46,15 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const location = useLocation();
+  
 
+
+
+  const handleLogout = async () => {
+    await logout();     // ✅ only handles auth state
+    clearCart();        // ✅ clear cart after auth reset
+    localStorage.removeItem("guestCart");
+  };
   useEffect(() => {
     if (location.pathname !== "/search") {
       setSearchQuery("");
@@ -174,7 +182,7 @@ const Navbar = () => {
                   </Link>
                 ))}
                 <button
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="hover:text-blue-500 transition-colors duration-200 flex items-center"
                 >
                   <FiLogOut className="mr-1.5" size={14} /> Logout
