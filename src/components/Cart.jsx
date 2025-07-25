@@ -33,6 +33,7 @@ export default function Cart() {
     city: "",
     zip: ""
   });
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
   const { total, savings } = cart.reduce(
     (acc, item) => {
@@ -122,16 +123,19 @@ const handleCheckout = async () => {
     placeOrder(cart, selectedPayment);
 
     // 2. ✅ Send sales data to backend
-    await fetch("http://localhost:5000/api/products/sales", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        items: cart.map((item) => ({
-          productId: item._id,
-          quantity: item.quantity
-        }))
-      })
-    });
+await fetch(`${API_BASE_URL}/products/sales`, {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    items: cart.map((item) => ({
+      productId: item._id,
+      quantity: item.quantity
+    }))
+  }),
+  credentials: "include" // Optional: needed if your backend uses cookies
+});
 
     // 3. Send confirmation email
     await sendOrderEmail(cart, address, total);

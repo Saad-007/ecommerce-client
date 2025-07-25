@@ -71,43 +71,42 @@ export default function ProductDetail() {
   const [averageRating, setAverageRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
-  // Fetch product reviews from database
-  useEffect(() => {
-    const fetchReviews = async () => {
-      try {
-        const response = await fetch(
-          `http://localhost:5000/api/reviews?productId=${id}`
-        );
-        if (!response.ok) {
-          throw new Error("Failed to fetch reviews");
-        }
-        const data = await response.json();
-
-        const reviewsData = data.map((review) => ({
-          ...review,
-          createdAt: new Date(review.createdAt).toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          }),
-          id: review._id || review.id, // Handle both _id and id
-        }));
-
-        const totalRating = reviewsData.reduce((sum, r) => sum + r.rating, 0);
-        setReviews(reviewsData);
-        setAverageRating(
-          reviewsData.length ? totalRating / reviewsData.length : 0
-        );
-      } catch (err) {
-        console.error("Failed to fetch reviews:", err);
-        toast.error("Failed to load reviews");
+ useEffect(() => {
+  const fetchReviews = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/reviews?productId=${id}`, {
+        credentials: "include", // if your backend requires auth cookies
+      });
+      if (!response.ok) {
+        throw new Error("Failed to fetch reviews");
       }
-    };
+      const data = await response.json();
 
+      const reviewsData = data.map((review) => ({
+        ...review,
+        createdAt: new Date(review.createdAt).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+        id: review._id || review.id,
+      }));
+
+      const totalRating = reviewsData.reduce((sum, r) => sum + r.rating, 0);
+      setReviews(reviewsData);
+      setAverageRating(reviewsData.length ? totalRating / reviewsData.length : 0);
+    } catch (err) {
+      console.error("Failed to fetch reviews:", err);
+      toast.error("Failed to load reviews");
+    }
+  };
+
+  if (id) {
     fetchReviews();
-  }, [id]);
-
+  }
+}, [id]);
   const product = products?.find((p) => String(p.id) === id);
 
   if (!product) {
@@ -215,21 +214,23 @@ export default function ProductDetail() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    try {
-      const response = await fetch("http://localhost:5000/api/reviews", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          productId: id,
-          productName: name,
-          rating: newReview.rating,
-          comment: newReview.comment,
-          name: newReview.name,
-          email: newReview.email,
-        }),
-      });
+ 
+try {
+  const response = await fetch(`${API_BASE_URL}/reviews`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      productId: id,
+      productName: name,
+      rating: newReview.rating,
+      comment: newReview.comment,
+      name: newReview.name,
+      email: newReview.email,
+    }),
+    credentials: "include", // optional, only if your backend uses cookies
+  });
 
       if (!response.ok) {
         const errorData = await response.json();

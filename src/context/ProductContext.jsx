@@ -10,64 +10,64 @@ const getSizeInBytes = (obj) => {
 // Cache configuration
 const CACHE_CONFIG = {
   MAX_SIZE: 4 * 1024 * 1024, // 4MB (leaving room for other data)
-  CACHE_KEY: 'cachedProducts',
+  CACHE_KEY: "cachedProducts",
   CACHE_EXPIRY: 24 * 60 * 60 * 1000, // 24 hours
 };
+
+// Use environment variable for API base URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
 export const ProductProvider = ({ children }) => {
   const [products, setProducts] = useState([]);
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const normalizeProduct = (product) => {
-    return {
-      ...product,
-      _id: product._id || product.id,
-      featured: Boolean(product.featured),
-      salesCount: Number(product.salesCount) || 0,
-      price: Number(product.price) || 0,
-      offerPrice: product.offerPrice ? Number(product.offerPrice) : null
-    };
-  };
+  const normalizeProduct = (product) => ({
+    ...product,
+    _id: product._id || product.id,
+    featured: Boolean(product.featured),
+    salesCount: Number(product.salesCount) || 0,
+    price: Number(product.price) || 0,
+    offerPrice: product.offerPrice ? Number(product.offerPrice) : null,
+  });
 
   const storeProductsInCache = (products) => {
     try {
       const cacheData = {
         timestamp: Date.now(),
-        data: products
+        data: products,
       };
 
       const cacheSize = getSizeInBytes(cacheData);
-      
+
       if (cacheSize > CACHE_CONFIG.MAX_SIZE) {
-        console.warn('Products data too large for cache. Only storing essential fields.');
-        
-        // Store minimal data if full data is too large
-        const minimalProducts = products.map(p => ({
+        console.warn("Products data too large for cache. Only storing essential fields.");
+
+        const minimalProducts = products.map((p) => ({
           _id: p._id,
           name: p.name,
           price: p.price,
           offerPrice: p.offerPrice,
           image: p.image,
-          featured: p.featured
+          featured: p.featured,
         }));
-        
+
         const minimalCache = {
           timestamp: Date.now(),
-          data: minimalProducts
+          data: minimalProducts,
         };
-        
+
         if (getSizeInBytes(minimalCache) <= CACHE_CONFIG.MAX_SIZE) {
           localStorage.setItem(CACHE_CONFIG.CACHE_KEY, JSON.stringify(minimalCache));
         } else {
-          console.warn('Even minimal product data exceeds cache limit. Not caching.');
+          console.warn("Even minimal product data exceeds cache limit. Not caching.");
           localStorage.removeItem(CACHE_CONFIG.CACHE_KEY);
         }
       } else {
         localStorage.setItem(CACHE_CONFIG.CACHE_KEY, JSON.stringify(cacheData));
       }
     } catch (error) {
-      console.error('Failed to store products in cache:', error);
+      console.error("Failed to store products in cache:", error);
     }
   };
 
@@ -75,18 +75,17 @@ export const ProductProvider = ({ children }) => {
     try {
       const cached = localStorage.getItem(CACHE_CONFIG.CACHE_KEY);
       if (!cached) return null;
-      
+
       const parsed = JSON.parse(cached);
-      
-      // Check if cache is expired
+
       if (Date.now() - parsed.timestamp > CACHE_CONFIG.CACHE_EXPIRY) {
         localStorage.removeItem(CACHE_CONFIG.CACHE_KEY);
         return null;
       }
-      
+
       return parsed.data;
     } catch (error) {
-      console.error('Failed to read products from cache:', error);
+      console.error("Failed to read products from cache:", error);
       return null;
     }
   };
@@ -94,52 +93,51 @@ export const ProductProvider = ({ children }) => {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/products");
-      
+      const res = await fetch(`${API_BASE_URL}/products`, {
+        credentials: "include",
+      });
+
       if (!res.ok) throw new Error("Failed to fetch products");
-      
+
       const data = await res.json();
       const productList = data.products || data || [];
       const normalized = productList.map(normalizeProduct);
-      
+
       setProducts(normalized);
-      setFeaturedProducts(normalized.filter(p => p.featured === true));
-      
-      // Store in cache (with size checks)
+      setFeaturedProducts(normalized.filter((p) => p.featured === true));
+
       storeProductsInCache(normalized);
     } catch (error) {
       console.error("Error fetching products:", error);
-      
-      // Fallback to cached data if available
+
       const cached = getProductsFromCache();
       if (cached) {
         setProducts(cached);
-        setFeaturedProducts(cached.filter(p => p.featured === true));
+        setFeaturedProducts(cached.filter((p) => p.featured === true));
       }
     } finally {
       setLoading(false);
     }
   };
 
-  // Add product
   const addProduct = async (product) => {
     try {
-      // Ensure salesCount exists
       if (typeof product.sold !== "number") product.sold = 0;
       if (typeof product.salesCount !== "number") product.salesCount = product.sold;
 
-      const res = await fetch("http://localhost:5000/api/products", {
+      const res = await fetch(`${API_BASE_URL}/products`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(product),
+        credentials: "include",
       });
 
       if (!res.ok) throw new Error("Failed to add product");
       const data = await res.json();
 
-      setProducts(prev => [...prev, data.product]);
+      setProducts((prev) => [...prev, data.product]);
       if (data.product.featured) {
-        setFeaturedProducts(prev => [...prev, data.product]);
+        setFeaturedProducts((prev) => [...prev, data.product]);
       }
       return data.product;
     } catch (error) {
@@ -148,60 +146,49 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
-  // Initialize with cached data while loading fresh data
-  useEffect(() => {
-    const cached = getProductsFromCache();
-    if (cached) {
-      setProducts(cached);
-      setFeaturedProducts(cached.filter(p => p.featured === true));
+  const deleteProduct = async (productId) => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/products/${productId}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete product");
+
+      setProducts((prev) => prev.filter((p) => String(p._id) !== String(productId)));
+      setFeaturedProducts((prev) => prev.filter((p) => String(p._id) !== String(productId)));
+    } catch (error) {
+      console.error("Delete product error:", error);
+      throw error;
     }
-    fetchProducts();
-  }, []);
+  };
 
-  // Delete product
-const deleteProduct = async (productId) => {
-  try {
-    const res = await fetch(`http://localhost:5000/api/products/${productId}`, {
-      method: "DELETE",
-    });
-
-    if (!res.ok) throw new Error("Failed to delete product");
-
-    // Update local state
-    setProducts(prev => prev.filter(p => String(p._id) !== String(productId)));
-    setFeaturedProducts(prev => prev.filter(p => String(p._id) !== String(productId)));
-
-  } catch (error) {
-    console.error("Delete product error:", error);
-    throw error;
-  }
-};
-  // Update product
   const updateProduct = async (updatedProduct) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/products/${updatedProduct._id}`, {
+      const res = await fetch(`${API_BASE_URL}/products/${updatedProduct._id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedProduct),
+        credentials: "include",
       });
 
       if (!res.ok) throw new Error("Failed to update product");
       const data = await res.json();
 
-      setProducts(prev =>
-        prev.map(p => (String(p._id) === String(updatedProduct._id) ? data.product : p)
-      ));
+      setProducts((prev) =>
+        prev.map((p) => (String(p._id) === String(updatedProduct._id) ? data.product : p))
+      );
 
       if (data.product.featured) {
-        setFeaturedProducts(prev => {
-          const exists = prev.some(p => String(p._id) === String(data.product._id));
-          return exists 
-            ? prev.map(p => (String(p._id) === String(data.product._id) ? data.product : p))
+        setFeaturedProducts((prev) => {
+          const exists = prev.some((p) => String(p._id) === String(data.product._id));
+          return exists
+            ? prev.map((p) => (String(p._id) === String(data.product._id) ? data.product : p))
             : [...prev, data.product];
-      });
+        });
       } else {
-        setFeaturedProducts(prev => 
-          prev.filter(p => String(p._id) !== String(data.product._id))
+        setFeaturedProducts((prev) =>
+          prev.filter((p) => String(p._id) !== String(data.product._id))
         );
       }
 
@@ -212,24 +199,23 @@ const deleteProduct = async (productId) => {
     }
   };
 
-  // Toggle featured status
   const toggleFeatured = async (productId) => {
     try {
-      const res = await fetch(`http://localhost:5000/api/products/${productId}/featured`, {
+      const res = await fetch(`${API_BASE_URL}/products/${productId}/featured`, {
         method: "PATCH",
+        credentials: "include",
       });
       const data = await res.json();
-      
-      // Update local state
-      setProducts(prev =>
-        prev.map(p => (String(p._id) === String(productId) ? data.product : p))
+
+      setProducts((prev) =>
+        prev.map((p) => (String(p._id) === String(productId) ? data.product : p))
       );
-      
+
       if (data.product.featured) {
-        setFeaturedProducts(prev => [...prev, data.product]);
+        setFeaturedProducts((prev) => [...prev, data.product]);
       } else {
-        setFeaturedProducts(prev => 
-          prev.filter(p => String(p._id) !== String(productId))
+        setFeaturedProducts((prev) =>
+          prev.filter((p) => String(p._id) !== String(productId))
         );
       }
 
@@ -239,6 +225,16 @@ const deleteProduct = async (productId) => {
       throw error;
     }
   };
+
+  // Initialize with cached data while fetching fresh data
+  useEffect(() => {
+    const cached = getProductsFromCache();
+    if (cached) {
+      setProducts(cached);
+      setFeaturedProducts(cached.filter((p) => p.featured === true));
+    }
+    fetchProducts();
+  }, []);
 
   return (
     <ProductContext.Provider
@@ -250,7 +246,7 @@ const deleteProduct = async (productId) => {
         addProduct,
         updateProduct,
         toggleFeatured,
-          deleteProduct, // ✅ <-- ADD THIS
+        deleteProduct,
       }}
     >
       {children}
