@@ -56,12 +56,19 @@ const login = async (email, password) => {
     await API.post("/auth/login", { email, password }, { withCredentials: true });
     
     // Verify auth status
-    const { data } = await API.get("/auth/me", { withCredentials: true });
-    setUser(data.user);
+const res = await API.get("/auth/me", { withCredentials: true });
+const fetchedUser = res.data?.data?.user;
 
-    const redirectPath = data.user.role === "admin"
-      ? "/admin/dashboard"
-      : location.state?.from?.pathname || "/";
+if (!fetchedUser) {
+  throw new Error("Failed to retrieve user info after login.");
+}
+
+setUser(fetchedUser);
+
+const redirectPath = fetchedUser.role === "admin"
+  ? "/admin/dashboard"
+  : location.state?.from?.pathname || "/";
+
 
     navigate(redirectPath);
     return data.user;
