@@ -51,6 +51,28 @@ export function CartProvider({ children }) {
     }
   }
 };
+const saveCartToBackend = async (newCart = cart) => {
+  const token = localStorage.getItem("token");
+  if (!token || !user || user.role === "admin") return;
+
+  try {
+    const formattedCart = newCart.map((item) => ({
+      productId: item._id || item.id,
+      quantity: item.quantity,
+    }));
+
+    await fetch(`${API_BASE_URL}/cart`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ cart: formattedCart }),
+    });
+  } catch (err) {
+    console.error("Cart save error:", err);
+  }
+};
 
   useEffect(() => {
   const token = localStorage.getItem("token");
@@ -132,20 +154,22 @@ useEffect(() => {
     }
   }, [user]);
 
-  const addToCart = (product) => {
-    setCart((prev) => {
-      const exists = prev.find((item) => item.id === product.id);
-      if (exists) {
-        return prev.map((item) =>
+const addToCart = (product) => {
+  setCart((prev) => {
+    const exists = prev.find((item) => item.id === product.id);
+    const updatedCart = exists
+      ? prev.map((item) =>
           item.id === product.id
             ? { ...item, quantity: item.quantity + 1 }
             : item
-        );
-      } else {
-        return [...prev, { ...product, quantity: 1 }];
-      }
-    });
-  };
+        )
+      : [...prev, { ...product, quantity: 1 }];
+
+    // 🔁 Save to backend
+    saveCartToBackend(updatedCart);
+    return updatedCart;
+  });
+};
 
   const removeFromCart = async (id) => {
     try {
@@ -190,7 +214,11 @@ setCart(updatedCart);
     );
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+  setCart([]);
+  saveCartToBackend([]);
+};
+
 
   const total = cart.reduce((sum, item) => {
     const discounted = getDiscountedPrice(item.price, item.off);
