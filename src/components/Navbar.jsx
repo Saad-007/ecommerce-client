@@ -38,7 +38,7 @@ const Navbar = () => {
   const [mobileCatOpen, setMobileCatOpen] = useState(false);
   const { user, isAdmin, logout } = useAuth();
   const { wishlist } = useWishlist();
-  const { cart} = useCart();
+  const { cart } = useCart();
   const { products } = useProducts();
   const navigate = useNavigate();
   const [suggestions, setSuggestions] = useState([]);
@@ -46,16 +46,12 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const location = useLocation();
-  const { clearCart } = useCart(); // Add this line inside the component
-
-
-
-
+  
   const handleLogout = async () => {
-  await logout();
-  clearCart();
-  localStorage.removeItem("guestCart");
-};
+    localStorage.removeItem("guestCart"); // Clear local guest cart
+
+    await logout();
+  };
 
   useEffect(() => {
     if (location.pathname !== "/search") {
@@ -175,14 +171,16 @@ const Navbar = () => {
                     <MdAdminPanelSettings className="mr-1.5" size={14} /> Admin
                     Account
                   </Link>
-                ) : (user &&(
-                  <Link
-                    to="/account"
-                    className="hover:text-blue-500 transition-colors duration-200 flex items-center"
-                  >
-                    <FiUser className="mr-1.5" size={14} /> My Account
-                  </Link>
-                ))}
+                ) : (
+                  user && (
+                    <Link
+                      to="/account"
+                      className="hover:text-blue-500 transition-colors duration-200 flex items-center"
+                    >
+                      <FiUser className="mr-1.5" size={14} /> My Account
+                    </Link>
+                  )
+                )}
                 <button
                   onClick={handleLogout}
                   className="hover:text-blue-500 transition-colors duration-200 flex items-center"
@@ -267,34 +265,38 @@ const Navbar = () => {
                 </button>
 
                 {/* Categories Dropdown Menu */}
-              {catDropdownOpen && (
-  <div className="absolute left-0 mt-1 w-64 bg-white rounded-md shadow-lg z-30 border border-gray-200 max-h-96 overflow-y-auto">
-    <div className="py-1">
-      {categories.map((category) => (
-        <div key={category.name} className="border-b border-gray-100">
-          <div className="flex items-center px-4 py-2 font-medium text-gray-800">
-            {category.icon}
-            <span className="ml-2">{category.name}</span>
-          </div>
-          {category.subcategories.map((sub) => (
-            <button
-              key={sub.name}
-              onClick={() => {
-                navigate(sub.path);
-                setCatDropdownOpen(false);
-              }}
-              className="flex items-center w-full text-left px-8 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600"
-            >
-              {sub.icon && <span className="mr-2">{sub.icon}</span>}
-              <span>{sub.name}</span>
-            </button>
-          ))}
-        </div>
-      ))}
-    </div>
-  </div>
-)}
-
+                {catDropdownOpen && (
+                  <div className="absolute left-0 mt-1 w-64 bg-white rounded-md shadow-lg z-30 border border-gray-200 max-h-96 overflow-y-auto">
+                    <div className="py-1">
+                      {categories.map((category) => (
+                        <div
+                          key={category.name}
+                          className="border-b border-gray-100"
+                        >
+                          <div className="flex items-center px-4 py-2 font-medium text-gray-800">
+                            {category.icon}
+                            <span className="ml-2">{category.name}</span>
+                          </div>
+                          {category.subcategories.map((sub) => (
+                            <button
+                              key={sub.name}
+                              onClick={() => {
+                                navigate(sub.path);
+                                setCatDropdownOpen(false);
+                              }}
+                              className="flex items-center w-full text-left px-8 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+                            >
+                              {sub.icon && (
+                                <span className="mr-2">{sub.icon}</span>
+                              )}
+                              <span>{sub.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Search Input */}
