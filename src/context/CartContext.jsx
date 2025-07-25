@@ -112,47 +112,61 @@ useEffect(() => {
   }
 }, [user]);
 
-  useEffect(() => {
-  const handleLoginMerge = async () => {
-    const guestCart = localStorage.getItem("guestCart");
+ useEffect(() => {
+  const mergeAndSaveCart = async () => {
+    const token = localStorage.getItem("token");
+    const guestCartRaw = localStorage.getItem("guestCart");
 
-    if (
-      user &&
-      user.role !== "admin" &&
-      guestCart &&
-      cart.length > 0 &&
-      !hasMergedCart
-    ) {
-      try {
-        const parsedGuestCart = JSON.parse(guestCart);
+    if (!user || user.role === "admin" || hasMergedCart) return;
 
-        const mergedCart = [...cart, ...parsedGuestCart].reduce((acc, item) => {
-          const existing = acc.find((i) => i.id === item.id);
-          if (existing) {
-            existing.quantity += item.quantity;
-          } else {
-            acc.push({ ...item });
-          }
-          return acc;
-        }, []);
+    // 1. Load backend cart
+    let backendCart = [];
+    try {
+      const res = await fetch(`${API_BASE_URL}/cart`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-        setHasMergedCart(true);
-        setCart(mergedCart);
-        localStorage.removeItem("guestCart");
-      } catch (error) {
-        console.error("Cart merge error:", error);
+      if (res.ok) {
+        const data = await res.json();
+        backendCart = (data.cart || []).map((item) => ({
+          ...item.productId,
+          quantity: item.quantity,
+          id: item.productId._id,
+        }));
       }
+    } catch (err) {
+      console.error("Failed to load backend cart:", err);
     }
+
+    // 2. Merge with guest cart
+    let guestCart = [];
+    try {
+      if (guestCartRaw) guestCart = JSON.parse(guestCartRaw);
+    } catch {}
+
+    const mergedCart = [...backendCart, ...guestCart].reduce((acc, item) => {
+      const existing = acc.find((i) => i.id === item.id);
+      if (existing) {
+        existing.quantity += item.quantity;
+      } else {
+        acc.push({ ...item });
+      }
+      return acc;
+    }, []);
+
+    // 3. Save merged cart
+    setCart(mergedCart);
+    await saveCartToBackend(mergedCart);
+
+    // 4. Cleanup
+    localStorage.removeItem("guestCart");
+    setHasMergedCart(true);
   };
 
-  handleLoginMerge();
-}, [user, cart, hasMergedCart]);
-
-  useEffect(() => {
-    if (user !== undefined) {
-      loadCart();
-    }
-  }, [user]);
+  mergeAndSaveCart();
+}, [user, hasMergedCart]);
 
 const addToCart = (product) => {
   setCart((prev) => {
