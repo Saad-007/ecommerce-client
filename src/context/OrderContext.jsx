@@ -76,59 +76,68 @@ export const OrdersProvider = ({ children }) => {
   };
 
   const placeOrder = async (items, paymentMethod, shippingAddress) => {
-    setLoading(true);
+  setLoading(true);
+  setError(null);
+
+  try {
+    // Validate input
+    if (!items || items.length === 0) {
+      throw new Error('Your cart is empty');
+    }
+
+    const orderData = {
+      items: items.map(item => ({
+        product: item.id,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+        image: item.image
+      })),
+      paymentMethod,
+      shippingAddress: {
+        ...shippingAddress,
+        email: shippingAddress.email || user?.email
+      }
+    };
+
+    // Clear any previous errors
     setError(null);
 
-    try {
-      if (!items || !Array.isArray(items) || items.length === 0) {
-        throw new Error("Cart must contain at least one item");
-      }
+    const response = await API.post('/orders', orderData, {
+      timeout: 30000 // 30 second timeout
+    });
 
-      const orderData = {
-        items: items.map((item) => ({
-          product: item.id || item.productId,
-          name: item.name,
-          price: Number(item.price),
-          quantity: Number(item.quantity),
-          image: item.image,
-        })),
-        paymentMethod,
-        shippingAddress: {
-          ...shippingAddress,
-          email: shippingAddress.email || user?.email,
-        },
-        total: items.reduce(
-          (acc, item) => acc + Number(item.price) * Number(item.quantity),
-          0
-        ),
-      };
-
-      console.log("Submitting order:", orderData);
-      const response = await API.post("/orders", orderData);
-
-      const newOrder = response.data.order;
-      if (!newOrder?._id) {
-        throw new Error("Invalid order response from server");
-      }
-
-      setOrders((prev) => [newOrder, ...prev]);
-      return newOrder;
-    } catch (err) {
-      console.error("Order placement failed:", {
-        config: err.config,
-        response: err.response,
-        message: err.message,
-      });
-
-      const errorMsg =
-        err.response?.data?.message || err.message || "Failed to place order";
-
-      setError(errorMsg);
-      throw new Error(errorMsg);
-    } finally {
-      setLoading(false);
+    // Validate response structure
+    if (!response.data?.success || !response.data.order) {
+      throw new Error('Invalid response from server');
     }
-  };
+
+    // Update frontend state
+    setOrders(prev => [response.data.order, ...prev]);
+    
+    // Return the complete order data
+    return {
+      success: true,
+      order: response.data.order
+    };
+
+  } catch (err) {
+    // Enhanced error handling
+    const errorMsg = err.response?.data?.message || 
+                    err.message || 
+                    'Checkout failed. Please try again.';
+    
+    setError(errorMsg);
+    
+    // Return error information
+    return {
+      success: false,
+      message: errorMsg
+    };
+  } finally {
+    setLoading(false);
+  }
+};
 
   // In OrderContext.jsx - updateOrderStatus
   // OrderContext.jsx - updateOrderStatus

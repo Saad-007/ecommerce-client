@@ -113,7 +113,7 @@ const AccountPage = () => {
   const last7Days = [...Array(7)]
     .map((_, i) => {
       const date = new Date();
-      date.setDate(date.getDate() - i);
+      date.setDate(date.getDate() - (6 - i));
       return safeFormat(date, "MMM d");
     })
     .reverse();
