@@ -2,18 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "vite.config.js",
+      "src": "index.html",
       "use": "@vercel/static-build"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "https://e-commerce-backend-production-36dc.up.railway.app/api/$1"
+      "source": "/api/(.*)",
+      "destination": "https://e-commerce-backend-production-36dc.up.railway.app/api/$1"
     },
     {
-      "src": "/(.*)",
-      "dest": "/index.html"
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
