@@ -18,6 +18,8 @@ import {
   FiShield,
   FiLock,
   FiMail,
+  FiMenu,
+  FiX
 } from "react-icons/fi";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
@@ -27,7 +29,7 @@ Chart.register(...registerables);
 
 const AccountPage = () => {
   const { user, logout } = useAuth();
-const { orders, updateOrderStatus, fetchOrders } = useOrders();
+  const { orders, updateOrderStatus, fetchOrders } = useOrders();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [storeStats, setStoreStats] = useState({
     totalRevenue: 0,
@@ -44,50 +46,43 @@ const { orders, updateOrderStatus, fetchOrders } = useOrders();
   });
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [updatingOrderIds, setUpdatingOrderIds] = useState(new Set());
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-useEffect(() => {
-  if (orders.length > 0) {
-    const paidNonCancelledOrders = orders.filter(
-      (order) =>
-        order.status?.toLowerCase() !== "cancelled" &&
-        order.paymentStatus?.toLowerCase() === "paid"
-    );
+  // Calculate store statistics
+  useEffect(() => {
+    if (orders.length > 0) {
+      const nonCancelledOrders = orders.filter(
+        (order) => !order.status || !order.status.toLowerCase().includes("cancel")
+      );
 
-    const totalRevenue = paidNonCancelledOrders.reduce(
-      (sum, order) => sum + (order.total || 0),
-      0
-    );
+      const validOrders = nonCancelledOrders;
+      const totalRevenue = validOrders.reduce(
+        (sum, order) => sum + (Number(order.total) || 0),
+        0
+      );
 
-    const currentMonth = safeFormat(new Date(), "yyyy-MM");
+      const currentMonth = safeFormat(new Date(), "yyyy-MM");
+      const monthlyRevenue = validOrders
+        .filter((order) => safeFormat(order.date, "yyyy-MM") === currentMonth)
+        .reduce((sum, order) => sum + (Number(order.total) || 0), 0);
 
-    const monthlyRevenue = paidNonCancelledOrders
-      .filter((order) => safeFormat(order.date, "yyyy-MM") === currentMonth)
-      .reduce((sum, order) => sum + (order.total || 0), 0);
+      setStoreStats({
+        totalRevenue,
+        monthlyRevenue,
+        totalOrders: validOrders.length,
+        activeCustomers: new Set(validOrders.map((o) => o.customerEmail)).size,
+      });
+    } else {
+      setStoreStats({
+        totalRevenue: 0,
+        monthlyRevenue: 0,
+        totalOrders: 0,
+        activeCustomers: 0,
+      });
+    }
+  }, [orders]);
 
-    setStoreStats({
-      totalRevenue,
-      monthlyRevenue,
-      totalOrders: paidNonCancelledOrders.length, // Now excludes cancelled orders // This still includes cancelled orders - change if needed
-      activeCustomers: new Set(orders.map((order) => order.customerEmail)).size,
-    });
-  }
-}, [orders]);
-
-const handleStatusChange = async (orderId, newStatus) => {
-  setUpdatingOrderIds((prev) => new Set(prev).add(orderId));
-  try {
-    await updateOrderStatus(orderId, newStatus);
-    await fetchOrders(); // 👈 Force refetch to get updated status
-  } finally {
-    setUpdatingOrderIds((prev) => {
-      const copy = new Set(prev);
-      copy.delete(orderId);
-      return copy;
-    });
-  }
-};
-
-
+  // Set admin data
   useEffect(() => {
     if (user) {
       setAdminData({
@@ -99,60 +94,22 @@ const handleStatusChange = async (orderId, newStatus) => {
     }
   }, [user]);
 
-  // Calculate store statistics
-useEffect(() => {
-  if (orders.length > 0) {
-    console.log("Raw orders:", orders); // Debug: Check original data
+  // Handle status change
+  const handleStatusChange = async (orderId, newStatus) => {
+    setUpdatingOrderIds((prev) => new Set(prev).add(orderId));
+    try {
+      await updateOrderStatus(orderId, newStatus);
+      await fetchOrders();
+    } finally {
+      setUpdatingOrderIds((prev) => {
+        const copy = new Set(prev);
+        copy.delete(orderId);
+        return copy;
+      });
+    }
+  };
 
-    // 1. Filter out cancelled orders (case-insensitive)
-    const nonCancelledOrders = orders.filter(
-      (order) => !order.status || !order.status.toLowerCase().includes("cancel")
-    );
-    console.log("Non-cancelled orders:", nonCancelledOrders); // Should show 2 orders
-
-    // 2. Option A: Include ONLY paid orders (strict)
-    // const validOrders = nonCancelledOrders.filter(
-    //   (order) => order.paymentStatus?.toLowerCase() === "paid"
-    // );
-
-    // 2. Option B: Include ALL non-cancelled orders (recommended)
-    const validOrders = nonCancelledOrders;
-    console.log("Valid orders (non-cancelled):", validOrders);
-
-    // 3. Calculate totals
-    const totalRevenue = validOrders.reduce(
-      (sum, order) => sum + (Number(order.total) || 0),
-      0
-    );
-
-    const currentMonth = safeFormat(new Date(), "yyyy-MM");
-    const monthlyRevenue = validOrders
-      .filter((order) => safeFormat(order.date, "yyyy-MM") === currentMonth)
-      .reduce((sum, order) => sum + (Number(order.total) || 0), 0);
-
-    console.log("Calculated stats:", { 
-      totalRevenue, 
-      monthlyRevenue,
-      totalOrders: validOrders.length,
-      activeCustomers: new Set(validOrders.map((o) => o.customerEmail)).size
-    });
-
-    setStoreStats({
-      totalRevenue,
-      monthlyRevenue,
-      totalOrders: validOrders.length,
-      activeCustomers: new Set(validOrders.map((o) => o.customerEmail)).size,
-    });
-  } else {
-    setStoreStats({
-      totalRevenue: 0,
-      monthlyRevenue: 0,
-      totalOrders: 0,
-      activeCustomers: 0,
-    });
-  }
-}, [orders]);
-
+  // Chart data
   const last7Days = [...Array(7)]
     .map((_, i) => {
       const date = new Date();
@@ -203,9 +160,10 @@ useEffect(() => {
         statusCounts.Cancelled++;
         break;
       default:
-        statusCounts.Processing++; // fallback
+        statusCounts.Processing++;
     }
   });
+
   const orderStatusData = {
     labels: ["Completed", "Processing", "Cancelled"],
     datasets: [
@@ -245,9 +203,71 @@ useEffect(() => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 bg-white shadow-md min-h-screen p-4">
+      {/* Mobile Header */}
+      <div className="lg:hidden bg-white shadow-sm p-4 flex justify-between items-center">
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="text-gray-500"
+        >
+          {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+        </button>
+        <h1 className="text-xl font-bold text-gray-800">
+          {activeTab === "dashboard" ? "Dashboard" : "My Account"}
+        </h1>
+        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+          <FiUser className="text-indigo-600" />
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row">
+        {/* Sidebar - Mobile */}
+        {mobileMenuOpen && (
+          <div className="lg:hidden bg-white shadow-md p-4 z-10">
+            <div className="flex items-center space-x-2 p-4 mb-4">
+              <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
+                <FiUser className="text-indigo-600" />
+              </div>
+              <div>
+                <h3 className="font-medium">{adminData.name}</h3>
+                <p className="text-xs text-gray-500">Store Admin</p>
+              </div>
+            </div>
+
+            <nav className="space-y-2">
+              <button
+                onClick={() => {
+                  setActiveTab("account");
+                  setMobileMenuOpen(false);
+                }}
+                className={`flex items-center space-x-2 w-full p-3 rounded-lg ${
+                  activeTab === "account"
+                    ? "bg-indigo-50 text-indigo-600"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                <FiSettings />
+                <span>My Account</span>
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("dashboard");
+                  setMobileMenuOpen(false);
+                }}
+                className={`flex items-center space-x-2 w-full p-3 rounded-lg ${
+                  activeTab === "dashboard"
+                    ? "bg-indigo-50 text-indigo-600"
+                    : "hover:bg-gray-100"
+                }`}
+              >
+                <FiTrendingUp />
+                <span>Dashboard</span>
+              </button>
+            </nav>
+          </div>
+        )}
+
+        {/* Sidebar - Desktop */}
+        <div className="hidden lg:block w-64 bg-white shadow-md min-h-screen p-4">
           <div className="flex items-center space-x-2 p-4 mb-8">
             <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center">
               <FiUser className="text-indigo-600" />
@@ -285,11 +305,11 @@ useEffect(() => {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 p-8">
+        <div className="flex-1 p-4 lg:p-8">
           {activeTab === "dashboard" && (
             <>
-              <div className="flex justify-between items-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-800">
+              <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-800 mb-2 lg:mb-0">
                   Store Dashboard
                 </h1>
                 <div className="text-sm text-gray-500">
@@ -297,8 +317,8 @@ useEffect(() => {
                 </div>
               </div>
 
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              {/* Stats Cards - Responsive Grid */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 {[
                   {
                     title: "Total Revenue",
@@ -323,29 +343,27 @@ useEffect(() => {
                 ].map((stat, index) => (
                   <div
                     key={index}
-                    className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
+                    className="bg-white p-4 rounded-lg shadow-sm border border-gray-100"
                   >
                     <div className="flex justify-between">
                       <div>
-                        <div className="text-gray-500 text-sm">
+                        <div className="text-xs md:text-sm text-gray-500">
                           {stat.title}
                         </div>
-                        <div className="text-2xl font-bold mt-2">
+                        <div className="text-lg md:text-xl font-bold mt-1">
                           {stat.value}
                         </div>
                       </div>
-                      <div className="text-2xl">{stat.icon}</div>
+                      <div className="text-xl">{stat.icon}</div>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Charts */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                  <h3 className="font-medium mb-4">
-                    Recent Sales (Last 7 Days)
-                  </h3>
+              {/* Charts - Stacked on mobile */}
+              <div className="grid grid-cols-1 gap-4 mb-6">
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                  <h3 className="font-medium mb-3">Recent Sales (Last 7 Days)</h3>
                   <div className="h-64">
                     <Bar
                       data={salesData}
@@ -361,10 +379,8 @@ useEffect(() => {
                     />
                   </div>
                 </div>
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                  <h3 className="font-medium mb-4">
-                    Order Status Distribution
-                  </h3>
+                <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100">
+                  <h3 className="font-medium mb-3">Order Status Distribution</h3>
                   <div className="h-64">
                     <Pie
                       data={orderStatusData}
@@ -377,57 +393,57 @@ useEffect(() => {
                 </div>
               </div>
 
-              {/* Recent Orders */}
-              <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="font-medium">Recent Orders</h3>
-
-                  <button className="text-sm text-indigo-600 hover:text-indigo-800">
-                    <Link to="/orders"> View All Orders</Link>
-                  </button>
+              {/* Recent Orders - Responsive Table */}
+              <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 overflow-x-auto">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4">
+                  <h3 className="font-medium mb-2 sm:mb-0">Recent Orders</h3>
+                  <Link 
+                    to="/orders" 
+                    className="text-sm text-indigo-600 hover:text-indigo-800"
+                  >
+                    View All Orders
+                  </Link>
                 </div>
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
+                <div className="min-w-full">
+                  <table className="w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                           Order ID
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                           Date
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                           Customer
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">
                           Amount
                         </th>
-                        {/* Removed Status column header */}
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {orders.map((order) => {
+                      {orders.slice(0, 5).map((order) => {
                         const orderId = order._id || order.id;
                         return (
                           <tr key={orderId} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                            <td className="px-3 py-3 whitespace-nowrap text-xs sm:text-sm font-medium text-gray-900">
                               #{orderId?.slice(-6) || "N/A"}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td className="px-3 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                               {safeFormat(
                                 order.date || order.createdAt,
                                 "MMM d, yyyy"
                               )}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td className="px-3 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                               {order.customerEmail ||
                                 order.user?.email ||
                                 "Guest"}
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            <td className="px-3 py-3 whitespace-nowrap text-xs sm:text-sm text-gray-500">
                               ${order.total?.toFixed(2) || "0.00"}
                             </td>
-                            {/* Removed Status cell */}
                           </tr>
                         );
                       })}
@@ -439,13 +455,12 @@ useEffect(() => {
           )}
 
           {activeTab === "account" && (
-            <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 transform transition-all duration-300 hover:shadow-xl">
-              {/* Header with animated gradient border */}
-              <div className="relative mb-8 pb-6 border-b border-gray-200">
-                <div className="absolute bottom-0 left-0 h-1 w-24 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full"></div>
-                <div className="flex justify-between items-center">
+            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm border border-gray-100">
+              {/* Header */}
+              <div className="mb-6 pb-4 border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
                   <div>
-                    <h1 className="text-3xl font-bold text-gray-800 bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">
+                    <h1 className="text-2xl font-bold text-gray-800">
                       Admin Profile
                     </h1>
                     <p className="text-gray-500 mt-1">
@@ -455,7 +470,7 @@ useEffect(() => {
                   {!editMode ? (
                     <button
                       onClick={() => setEditMode(true)}
-                      className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:border-indigo-300"
+                      className="mt-3 sm:mt-0 flex items-center space-x-2 px-3 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md"
                     >
                       <FiEdit className="text-indigo-600" />
                       <span className="text-indigo-600 font-medium">
@@ -463,19 +478,19 @@ useEffect(() => {
                       </span>
                     </button>
                   ) : (
-                    <div className="flex space-x-3">
+                    <div className="mt-3 sm:mt-0 flex space-x-2">
                       <button
                         onClick={() => setEditMode(false)}
-                        className="px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition-all duration-200 hover:border-gray-300 text-gray-600 font-medium"
+                        className="px-3 py-2 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md text-gray-600 font-medium"
                       >
                         Cancel
                       </button>
                       <button
                         onClick={handleSaveChanges}
-                        className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 hover:from-indigo-700 hover:to-purple-700 font-medium flex items-center"
+                        className="px-3 py-2 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 font-medium flex items-center"
                       >
                         <FiSave className="mr-2" />
-                        Save Changes
+                        Save
                       </button>
                     </div>
                   )}
@@ -483,37 +498,37 @@ useEffect(() => {
               </div>
 
               {/* Profile Content */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Profile Card */}
                 <div className="lg:col-span-1">
-                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 p-6 rounded-2xl border border-indigo-100 shadow-sm">
+                  <div className="bg-indigo-50 p-4 rounded-lg border border-indigo-100">
                     <div className="flex flex-col items-center">
-                      <div className="relative mb-4">
-                        <div className="w-32 h-32 rounded-full bg-white border-4 border-white shadow-lg overflow-hidden">
+                      <div className="relative mb-3">
+                        <div className="w-24 h-24 rounded-full bg-white border-4 border-white shadow-md overflow-hidden">
                           <div className="w-full h-full bg-indigo-100 flex items-center justify-center text-indigo-600">
-                            <FiUser className="w-16 h-16" />
+                            <FiUser className="w-12 h-12" />
                           </div>
                         </div>
                         {editMode && (
-                          <button className="absolute bottom-0 right-0 bg-white p-2 rounded-full shadow-md border border-gray-200 hover:bg-gray-50 transition-colors">
-                            <FiEdit2 className="text-indigo-600 w-4 h-4" />
+                          <button className="absolute bottom-0 right-0 bg-white p-1.5 rounded-full shadow-sm border border-gray-200 hover:bg-gray-50">
+                            <FiEdit2 className="text-indigo-600 w-3 h-3" />
                           </button>
                         )}
                       </div>
-                      <h2 className="text-xl font-bold text-gray-800">
+                      <h2 className="text-lg font-bold text-gray-800">
                         {adminData.name}
                       </h2>
-                      <p className="text-indigo-600 font-medium">
+                      <p className="text-indigo-600 font-medium text-sm">
                         Store Administrator
                       </p>
-                      <div className="mt-4 w-full">
-                        <div className="flex justify-between text-sm text-gray-500 mb-1">
+                      <div className="mt-3 w-full">
+                        <div className="flex justify-between text-xs text-gray-500 mb-1">
                           <span>Profile Completion</span>
                           <span>85%</span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 rounded-full h-1.5">
                           <div
-                            className="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full"
+                            className="bg-indigo-500 h-1.5 rounded-full"
                             style={{ width: "85%" }}
                           ></div>
                         </div>
@@ -523,24 +538,24 @@ useEffect(() => {
                 </div>
 
                 {/* Information Sections */}
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-4">
                   {/* Personal Information */}
-                  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+                  <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-lg font-semibold text-gray-800 flex items-center">
                         <FiUser className="mr-2 text-indigo-600" />
                         Personal Information
                       </h3>
                       {editMode && (
-                        <span className="text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded-full">
+                        <span className="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full">
                           Editing
                         </span>
                       )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 mb-1">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1">
                           Full Name
                         </label>
                         {editMode ? (
@@ -549,7 +564,7 @@ useEffect(() => {
                             name="name"
                             value={adminData.name}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all"
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
                           />
                         ) : (
                           <p className="text-gray-800 font-medium">
@@ -559,7 +574,7 @@ useEffect(() => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 mb-1">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1">
                           Email Address
                         </label>
                         {editMode ? (
@@ -568,7 +583,7 @@ useEffect(() => {
                             name="email"
                             value={adminData.email}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all"
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
                           />
                         ) : (
                           <p className="text-gray-800 font-medium">
@@ -578,7 +593,7 @@ useEffect(() => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 mb-1">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1">
                           Phone Number
                         </label>
                         {editMode ? (
@@ -587,7 +602,7 @@ useEffect(() => {
                             name="phone"
                             value={adminData.phone}
                             onChange={handleInputChange}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all"
+                            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500"
                           />
                         ) : (
                           <p className="text-gray-800 font-medium">
@@ -599,15 +614,15 @@ useEffect(() => {
                   </div>
 
                   {/* Account Details */}
-                  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                    <h3 className="text-xl font-semibold text-gray-800 flex items-center mb-4">
+                  <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center mb-3">
                       <FiKey className="mr-2 text-indigo-600" />
                       Account Details
                     </h3>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 mb-1">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1">
                           Member Since
                         </label>
                         <p className="text-gray-800 font-medium">
@@ -616,21 +631,21 @@ useEffect(() => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 mb-1">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1">
                           Account Type
                         </label>
                         <div className="flex items-center">
                           <p className="text-gray-800 font-medium mr-2">
                             Store Administrator
                           </p>
-                          <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded-full">
+                          <span className="bg-indigo-100 text-indigo-800 text-xs px-2 py-0.5 rounded-full">
                             Verified
                           </span>
                         </div>
                       </div>
 
                       <div>
-                        <label className="block text-sm font-medium text-gray-500 mb-1">
+                        <label className="block text-xs sm:text-sm font-medium text-gray-500 mb-1">
                           Last Login
                         </label>
                         <p className="text-gray-800 font-medium">
@@ -641,34 +656,34 @@ useEffect(() => {
                   </div>
 
                   {/* Security Section */}
-                  <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-                    <h3 className="text-xl font-semibold text-gray-800 flex items-center mb-4">
+                  <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-sm">
+                    <h3 className="text-lg font-semibold text-gray-800 flex items-center mb-3">
                       <FiShield className="mr-2 text-indigo-600" />
                       Security
                     </h3>
 
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <div>
-                          <h4 className="font-medium text-gray-800">
+                          <h4 className="font-medium text-gray-800 text-sm sm:text-base">
                             Password
                           </h4>
-                          <p className="text-sm text-gray-500">
+                          <p className="text-xs text-gray-500">
                             Last changed 3 months ago
                           </p>
                         </div>
-                        <button className="px-4 py-2 bg-white border border-gray-200 rounded-lg shadow-sm text-indigo-600 hover:bg-gray-50 transition-colors">
-                          Change Password
+                        <button className="px-3 py-1.5 text-xs sm:text-sm bg-white border border-gray-200 rounded-lg shadow-sm text-indigo-600 hover:bg-gray-50">
+                          Change
                         </button>
                       </div>
 
-                      <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg">
+                      <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
                         <div>
-                          <h4 className="font-medium text-gray-800">
-                            Two-Factor Authentication
+                          <h4 className="font-medium text-gray-800 text-sm sm:text-base">
+                            2FA
                           </h4>
-                          <p className="text-sm text-gray-500">
-                            Add extra security to your account
+                          <p className="text-xs text-gray-500">
+                            Extra account security
                           </p>
                         </div>
                         <Switch
@@ -676,22 +691,22 @@ useEffect(() => {
                           onChange={setTwoFactorEnabled}
                           className={`${
                             twoFactorEnabled ? "bg-indigo-600" : "bg-gray-200"
-                          } relative inline-flex h-6 w-11 items-center rounded-full`}
+                          } relative inline-flex h-5 w-10 items-center rounded-full`}
                         >
                           <span
                             className={`${
                               twoFactorEnabled
-                                ? "translate-x-6"
+                                ? "translate-x-5"
                                 : "translate-x-1"
-                            } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                            } inline-block h-3 w-3 transform rounded-full bg-white transition`}
                           />
                         </Switch>
                       </div>
 
-                      <div className="pt-4 border-t border-gray-200">
+                      <div className="pt-3 border-t border-gray-200">
                         <button
                           onClick={logout}
-                          className="flex items-center space-x-2 text-red-600 hover:text-red-800 transition-colors"
+                          className="flex items-center space-x-2 text-red-600 hover:text-red-800 text-sm sm:text-base"
                         >
                           <FiLogOut />
                           <span>Sign out from all devices</span>

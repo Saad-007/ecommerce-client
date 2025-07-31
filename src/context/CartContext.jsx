@@ -8,6 +8,7 @@ export const useCart = () => useContext(CartContext);
 export const CartProvider = ({ children }) => {
   const { user, token } = useAuth();
   const [cart, setCart] = useState([]);
+  const [isInitialized, setIsInitialized] = useState(false);
   const API = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
   // Load cart when authentication state changes
@@ -20,12 +21,36 @@ export const CartProvider = ({ children }) => {
             headers: { Authorization: `Bearer ${token}` }
           });
           const data = await response.json();
-          setCart(data.cart || []);
+          
+          // Merge guest cart with user cart if available
+          const guestCart = localStorage.getItem('guestCart');
+          if (guestCart && !isInitialized) {
+            const parsedGuestCart = JSON.parse(guestCart);
+            const mergedCart = [...parsedGuestCart, ...(data.cart || [])].reduce((acc, item) => {
+              const existingItem = acc.find(i => i.id === (item.id || item._id));
+              if (existingItem) {
+                existingItem.quantity += item.quantity;
+              } else {
+                acc.push({
+                  ...item,
+                  id: item.id || item._id,
+                  quantity: item.quantity || 1
+                });
+              }
+              return acc;
+            }, []);
+            
+            setCart(mergedCart);
+            localStorage.removeItem('guestCart'); // Clear guest cart after merge
+          } else {
+            setCart(data.cart || []);
+          }
         } else {
           // Load guest cart from localStorage
           const guestCart = localStorage.getItem('guestCart');
           setCart(guestCart ? JSON.parse(guestCart) : []);
         }
+        setIsInitialized(true);
       } catch (error) {
         console.error("Cart load error:", error);
       }
@@ -35,6 +60,8 @@ export const CartProvider = ({ children }) => {
 
   // Persist cart changes
   useEffect(() => {
+    if (!isInitialized) return;
+
     const saveCart = async () => {
       try {
         if (user && token) {
@@ -56,7 +83,7 @@ export const CartProvider = ({ children }) => {
       }
     };
     saveCart();
-  }, [cart, user, token]);
+  }, [cart, user, token, isInitialized]);
 
   // Add to cart with proper ID handling
   const addToCart = (product) => {

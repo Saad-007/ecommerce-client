@@ -885,19 +885,49 @@ try {
               </div>
             </div>
           </div>
-                {/* You May Also Like Section */}
-<div className="border-t border-gray-200 px-8 py-12 bg-gray-50/80">
+            {/* You May Also Like Section */}
+<div className="border-t border-gray-200 px-4 sm:px-8 py-12 bg-gray-50/80">
   <div className="max-w-7xl mx-auto">
     <h2 className="text-2xl font-bold text-gray-900 mb-8">You May Also Like</h2>
     
-    {/* Related Products Grid */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    {/* Mobile Carousel - 2-3 products per row */}
+    <div className="lg:hidden relative overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory hide-scrollbar">
+      <div className="flex space-x-4 w-max">
+        {products
+          .filter(p => 
+            p.category === product.category && 
+            p.id !== product.id
+          )
+          .slice(0, 6) // Show max 6 related products
+          .map(relatedProduct => (
+            <div 
+              key={relatedProduct.id}
+              className="w-[calc(50vw-1.5rem)] sm:w-[calc(33.3vw-1.5rem)] flex-shrink-0 snap-start" // 2 on mobile, 3 on sm
+            >
+              <motion.div
+                whileHover={{ y: -5 }}
+                transition={{ duration: 0.2 }}
+                className="h-full"
+              >
+                <ProductCard 
+                  product={relatedProduct}
+                  className="h-full"
+                />
+              </motion.div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    {/* Desktop Grid - 4 products per row */}
+    <div className="hidden lg:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
       {products
         .filter(p => 
           p.category === product.category && 
-          p.id !== product.id // Exclude current product
+          p.id !== product.id
         )
-        .slice(0, 4) // Show max 4 related products
+        .slice(0, 4)
         .map(relatedProduct => (
           <motion.div
             key={relatedProduct.id}

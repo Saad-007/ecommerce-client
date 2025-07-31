@@ -127,6 +127,23 @@ const Navbar = () => {
     }
   };
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        catDropdownOpen &&
+        !event.target.closest(".categories-dropdown-container")
+      ) {
+        setCatDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [catDropdownOpen]);
+
   return (
     <nav
       className={`bg-white sticky top-0 z-50 border-b border-gray-100 transition-all duration-300 ${
@@ -200,27 +217,27 @@ const Navbar = () => {
           <div className="hidden lg:flex items-center space-x-6 ml-8">
             <Link
               to="/"
-              className="text-sm text-gray-700 hover:text-blue-600 font-medium py-1.5 border-b-2 border-transparent hover:border-blue-600 transition-colors"
+              className="text-sm text-gray-700 hover:text-[#4c4c4c] font-medium py-1.5 border-b-2 border-transparent hover:border-[#4c4c4c] transition-colors"
             >
               Home
             </Link>
             <Link
               to="/Home"
-              className="text-sm text-gray-700 hover:text-blue-600 font-medium py-1.5 border-b-2 border-transparent hover:border-blue-600 transition-colors"
+              className="text-sm text-gray-700 hover:text-[#4c4c4c] font-medium py-1.5 border-b-2 border-transparent hover:border-[#4c4c4c] transition-colors"
             >
               Products
             </Link>
             {isAdmin && (
               <Link
                 to="/orders"
-                className="text-sm text-gray-700 hover:text-blue-600 font-medium py-1.5 border-b-2 border-transparent hover:border-blue-600 transition-colors"
+                className="text-sm text-gray-700 hover:text-[#4c4c4c] font-medium py-1.5 border-b-2 border-transparent hover:border-[#4c4c4c] transition-colors"
               >
                 Orders
               </Link>
             )}
             <Link
               to="/Aboutus"
-              className="text-sm text-gray-700 hover:text-blue-600 font-medium py-1.5 border-b-2 border-transparent hover:border-blue-600 transition-colors"
+              className="text-sm text-gray-700 hover:text-[#4c4c4c] font-medium py-1.5 border-b-2 border-transparent hover:border-[#4c4c4c] transition-colors"
             >
               About
             </Link>
@@ -230,7 +247,7 @@ const Navbar = () => {
           <div className="hidden lg:flex flex-1 max-w-md mx-4">
             <div className="relative flex w-full">
               {/* Categories Dropdown */}
-              <div className="relative">
+              <div className="relative categories-dropdown-container">
                 <button
                   onClick={() => setCatDropdownOpen(!catDropdownOpen)}
                   className="h-full bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-l-md border-r border-gray-200 flex items-center text-xs font-medium"
@@ -468,7 +485,10 @@ const Navbar = () => {
                       <li key={subIndex}>
                         <Link
                           to={subcat.path}
-                          onClick={() => setMenuOpen(false)}
+                          onClick={() => {
+                            setMobileCatOpen(false);
+                            setMenuOpen(false);
+                          }}
                           className="block py-1 text-xs text-gray-600 hover:text-blue-500"
                         >
                           {subcat.name}

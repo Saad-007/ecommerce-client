@@ -17,15 +17,17 @@ export default function CategoryPage() {
         {categoryName} Products
       </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {filtered.length > 0 ? (
           filtered.map((product, index) => (
-            <ProductCard key={index} product={product} />
+            <div key={index} className="w-full">
+              <ProductCard product={product} />
+            </div>
           ))
         ) : (
-          <p className="col-span-full text-center text-gray-500">
+          <div className="col-span-full text-center text-gray-500">
             No products found in "{categoryName}" category.
-          </p>
+          </div>
         )}
       </div>
     </div>

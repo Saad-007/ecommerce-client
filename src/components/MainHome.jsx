@@ -530,6 +530,7 @@ const filteredProducts = products.filter((product) => {
   </div>
 </section>
 {/* Luxury Categories Section */}
+{/* Luxury Categories Section */}
 <section className="py-20 bg-white">
   <div className="container mx-auto px-6">
     <div className="text-center mb-16">
@@ -538,35 +539,46 @@ const filteredProducts = products.filter((product) => {
     </div>
     
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {categories.map((category, index) => (
-        <motion.div 
-          key={index}
-          whileHover={{ y: -8 }}
-          className="group relative overflow-hidden rounded-2xl aspect-[3/4]"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: index * 0.1 }}
-          viewport={{ once: true }}
-        >
-          <Link to={category.link || category.path || "#"} className="block h-full">
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
-            <img 
-              src={category.image} 
-              alt={category.name}
-              className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
-            />
-            <div className="absolute bottom-0 left-0 p-6 z-20 w-full">
-              <h3 className="text-xl font-medium text-white mb-1">{category.name}</h3>
-              <p className="text-white/80 text-sm">{category.count} items</p>
-              <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <span className="inline-flex items-center text-white/90 text-sm">
-                  Explore collection <FiArrowRight className="ml-2" />
-                </span>
+      {categories.map((category, index) => {
+        // Extract the base category name from the path
+        const categoryKey = category.path.replace('/category/', '').toLowerCase();
+        
+        // Count products in this category
+        const productCount = products.filter(product => {
+          const productCategory = product.category?.toLowerCase();
+          return productCategory && productCategory.includes(categoryKey);
+        }).length;
+
+        return (
+          <motion.div 
+            key={index}
+            whileHover={{ y: -8 }}
+            className="group relative overflow-hidden rounded-2xl aspect-[3/4]"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            viewport={{ once: true }}
+          >
+            <Link to={category.path} className="block h-full">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10"></div>
+              <img 
+                src={category.image} 
+                alt={category.name}
+                className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500"
+              />
+              <div className="absolute bottom-0 left-0 p-6 z-20 w-full">
+                <h3 className="text-xl font-medium text-white mb-1">{category.name}</h3>
+                <p className="text-white/80 text-sm">{productCount} items</p>
+                <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <span className="inline-flex items-center text-white/90 text-sm">
+                    Explore collection <FiArrowRight className="ml-2" />
+                  </span>
+                </div>
               </div>
-            </div>
-          </Link>
-        </motion.div>
-      ))}
+            </Link>
+          </motion.div>
+        );
+      })}
     </div>
   </div>
 </section>
