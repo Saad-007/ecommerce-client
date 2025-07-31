@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react(),
         tailwindcss()
   ],
-  base: '/', // ✅ Leave it empty for Vercel deployment
+  base: './', // ✅ Leave it empty for Vercel deployment
   build: {
     outDir: 'dist'
   },
