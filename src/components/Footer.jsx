@@ -18,8 +18,8 @@ const Footer = () => {
     {
       title: "Shop",
       links: [
-        { name: "New Arrivals", path: "/new" },
-        { name: "Most Selling Products", path: "/bestsellers" },
+        { name: "New Arrivals", path: "/Home#New-Arrival" },
+        { name: "Most Selling Products", path: "/Home#most-selling" },
       ],
     },
     {
@@ -46,7 +46,7 @@ const Footer = () => {
               <span className="bg-[#4c4c4c] text-white p-2 rounded-lg mr-3 group-hover:rotate-12 transition-transform duration-300">
                 <FiShoppingCart size={20} />
               </span>
-              <span className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+              <span className="text-xl font-bold text-gray-800 group-hover:text-[#4c4c4c] transition-colors">
                 ShopPlus
               </span>
             </Link>
@@ -59,7 +59,7 @@ const Footer = () => {
                   key={i}
                   href="#"
                   aria-label={`Social Link ${i + 1}`}
-                  className="text-gray-400 hover:text-blue-500 transition-colors hover:-translate-y-1 duration-200"
+                  className="text-gray-400 hover:text-[#4c4c4c] transition-colors hover:-translate-y-1 duration-200"
                 >
                   <Icon size={18} className="hover:scale-110 transition-transform" />
                 </a>
@@ -78,9 +78,9 @@ const Footer = () => {
                   <li key={j}>
                     <Link
                       to={link.path}
-                      className="text-gray-500 hover:text-blue-500 text-sm transition-colors flex items-center group"
+                      className="text-gray-500 hover:text-[#4c4c4c] text-sm transition-colors flex items-center group"
                     >
-                      <span className="w-1 h-1 bg-gray-300 rounded-full mr-2 group-hover:bg-blue-500 transition-colors"></span>
+                      <span className="w-1 h-1 bg-gray-300 rounded-full mr-2 group-hover:bg-[#4c4c4c] transition-colors"></span>
                       {link.name}
                     </Link>
                   </li>
@@ -96,18 +96,18 @@ const Footer = () => {
             </h4>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
-                <FiMapPin className="text-blue-500 mt-0.5 flex-shrink-0" />
+                <FiMapPin className="text-[#4c4c4c] mt-0.5 flex-shrink-0" />
                 <p className="text-gray-500 text-sm leading-relaxed">
                   123 Store Street, Cityville
                 </p>
               </div>
               <div className="flex items-center gap-3">
-                <FiPhone className="text-blue-500" />
+                <FiPhone className="text-[#4c4c4c]" />
                 <p className="text-gray-500 text-sm">+1 (555) 123-4567</p>
               </div>
               <div className="flex items-center gap-3">
-                <FiMail className="text-blue-500" />
-                <p className="text-gray-500 text-sm hover:text-blue-500 transition-colors">
+                <FiMail className="text-[#4c4c4c]" />
+                <p className="text-gray-500 text-sm hover:text-[#4c4c4c] transition-colors">
                   support@shopplus.com
                 </p>
               </div>
@@ -121,7 +121,7 @@ const Footer = () => {
         <div className="max-w-6xl mx-auto px-6">
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-full shadow-sm">
-              <BsShieldCheck className="text-blue-500" size={20} />
+              <BsShieldCheck className="text-[#4c4c4c]" size={20} />
               <span className="text-gray-600 text-sm font-medium">Secure Payments</span>
             </div>
           </div>
@@ -137,13 +137,13 @@ const Footer = () => {
           <div className="flex gap-6">
             <Link 
               to="/privacy" 
-              className="text-gray-500 hover:text-blue-500 transition-colors font-medium"
+              className="text-gray-500 hover:text-[#4c4c4c] transition-colors font-medium"
             >
               Privacy
             </Link>
             <Link 
               to="/terms" 
-              className="text-gray-500 hover:text-blue-500 transition-colors font-medium"
+              className="text-gray-500 hover:text-[#4c4c4c] transition-colors font-medium"
             >
               Terms
             </Link>

@@ -7,7 +7,6 @@ import { MdAdminPanelSettings } from "react-icons/md";
 import { useProducts } from "../context/ProductContext";
 import { useSearch } from "../context/SearchContext";
 import { useLocation } from "react-router-dom";
-import ProductCard from "./ProductCard";
 import {
   FiSearch,
   FiHeart,
@@ -17,7 +16,6 @@ import {
   FiUser,
   FiGrid,
   FiChevronDown,
-  FiChevronRight,
   FiLogOut,
 } from "react-icons/fi";
 import {
@@ -44,66 +42,56 @@ const Navbar = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [searchInput, setSearchInput] = useState("");
   const location = useLocation();
-  
-  const handleLogout = async () => {
-    localStorage.removeItem("guestCart"); // Clear local guest cart
 
+  const handleLogout = async () => {
+    localStorage.removeItem("guestCart");
     await logout();
   };
 
   useEffect(() => {
     if (location.pathname !== "/search") {
       setSearchQuery("");
-      setShowSuggestions(false); // optional: hide suggestions on page change
+      setShowSuggestions(false);
     }
   }, [location, setSearchQuery]);
-  // Handle scroll effect for navbar
+
   useEffect(() => {
     const handleScroll = () => {
-      const isScrolled = window.scrollY > 10;
-      if (isScrolled !== scrolled) {
-        setScrolled(isScrolled);
-      }
+      setScrolled(window.scrollY > 10);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [scrolled]);
-    const cartCount = user ? cart.reduce((total, item) => total + item.quantity, 0) : 0;
+  }, []);
+
+  const cartCount = user
+    ? cart.reduce((total, item) => total + item.quantity, 0)
+    : 0;
 
   const categories = [
     {
       name: "Fashion",
-      icon: <MdLocalOffer className="text-pink-500" />,
+      icon: <MdLocalOffer className="text-pink-500" size={14} />,
       subcategories: [
-        { name: "Men's Fashion", icon: <MdMale />, path: "/category/male" },
-        {
-          name: "Women's Fashion",
-          icon: <MdFemale />,
-          path: "/category/female",
-        },
-        {
-          name: "Kids & Babies",
-          icon: <MdChildCare />,
-          path: "/category/children",
-        },
-        { name: "Jewelry", icon: <BsGem />, path: "/category/jewelry" },
+        { name: "Men", icon: <MdMale size={14} />, path: "/category/male" },
+        { name: "Women", icon: <MdFemale size={14} />, path: "/category/female" },
+        { name: "Kids", icon: <MdChildCare size={14} />, path: "/category/children" },
+        { name: "Jewelry", icon: <BsGem size={14} />, path: "/category/jewelry" },
       ],
     },
     {
       name: "Electronics",
-      icon: <MdLaptop className="text-blue-500" />,
+      icon: <MdLaptop className="text-blue-500" size={14} />,
       subcategories: [
-        { name: "Phones", icon: <MdPhoneIphone />, path: "/category/phones" },
+        { name: "Phones", icon: <MdPhoneIphone size={14} />, path: "/category/phones" },
         { name: "Laptops", path: "/category/laptops" },
         { name: "Accessories", path: "/category/accessories" },
       ],
     },
     {
-      name: "Home & Living",
-      icon: <MdHome className="text-green-500" />,
+      name: "Home",
+      icon: <MdHome className="text-green-500" size={14} />,
       subcategories: [
         { name: "Furniture", path: "/category/furniture" },
         { name: "Kitchen", path: "/category/kitchen" },
@@ -112,7 +100,6 @@ const Navbar = () => {
     },
   ];
 
-  // Update suggestions based on searchInput
   useEffect(() => {
     if (searchQuery.trim() === "") {
       setSuggestions([]);
@@ -140,66 +127,52 @@ const Navbar = () => {
     }
   };
 
-  const handleSuggestionClick = (product) => {
-    console.log("Navigating to product:", {
-      id: product._id,
-      name: product.name,
-      existsInProducts: products.some((p) => p._id === product._id),
-    });
-
-    navigate(`/product/${product.id}`);
-  };
   return (
     <nav
       className={`bg-white sticky top-0 z-50 border-b border-gray-100 transition-all duration-300 ${
-        scrolled ? "shadow-md" : "shadow-sm"
+        scrolled ? "shadow-sm" : ""
       }`}
     >
-      {/* Top Bar */}
-      <div className="bg-gray-50 text-gray-600 py-2 px-4 text-xs font-medium">
+      {/* Top Bar - Slimmed down */}
+      <div className="bg-gray-50 text-gray-600 py-1 px-4 text-xs">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center">
-            <span>Summer Sale: Up to 50% off! 🎉</span>
-          </div>
-          <div className="flex items-center space-x-4">
+          <span>Summer Sale: Up to 50% off! 🎉</span>
+          <div className="flex items-center space-x-3">
             {user ? (
-              <div className="flex items-center space-x-4">
+              <>
                 {isAdmin ? (
                   <Link
                     to="/admin/account"
-                    className="hover:text-blue-500 transition-colors duration-200 flex items-center"
+                    className="hover:text-blue-500 transition-colors flex items-center"
                   >
-                    <MdAdminPanelSettings className="mr-1.5" size={14} /> Admin
-                    Account
+                    <MdAdminPanelSettings className="mr-1" size={12} /> Admin
                   </Link>
                 ) : (
-                  user && (
-                    <Link
-                      to="/account"
-                      className="hover:text-blue-500 transition-colors duration-200 flex items-center"
-                    >
-                      <FiUser className="mr-1.5" size={14} /> My Account
-                    </Link>
-                  )
+                  <Link
+                    to="/account"
+                    className="hover:text-blue-500 transition-colors flex items-center"
+                  >
+                    <FiUser className="mr-1" size={12} /> Account
+                  </Link>
                 )}
                 <button
                   onClick={handleLogout}
-                  className="hover:text-blue-500 transition-colors duration-200 flex items-center"
+                  className="hover:text-blue-500 transition-colors flex items-center"
                 >
-                  <FiLogOut className="mr-1.5" size={14} /> Logout
+                  <FiLogOut className="mr-1" size={12} /> Logout
                 </button>
-              </div>
+              </>
             ) : (
               <>
                 <Link
                   to="/login"
-                  className="hover:text-blue-500 transition-colors duration-200 flex items-center"
+                  className="hover:text-blue-500 transition-colors flex items-center"
                 >
-                  <FiUser className="mr-1.5" size={14} /> Login
+                  <FiUser className="mr-1" size={12} /> Login
                 </Link>
                 <Link
                   to="/signup"
-                  className="hover:text-blue-500 transition-colors duration-200 flex items-center"
+                  className="hover:text-blue-500 transition-colors"
                 >
                   Sign Up
                 </Link>
@@ -209,72 +182,78 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Main Nav */}
+      {/* Main Nav - Compact */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-20 items-center">
-          {/* Logo */}
-          <div className="flex items-center">
-            <Link
-              to="/"
-              className="text-xl font-semibold text-gray-900 flex items-center hover:opacity-90 transition-opacity"
-            >
-              <span className="bg-[#4c4c4c] text-white p-2 rounded-lg mr-3">
-                <FiShoppingCart size={18} />
-              </span>
-              ShopPlus
-            </Link>
-          </div>
+        <div className="flex justify-between h-16 items-center">
+          {/* Logo - Smaller */}
+          <Link
+            to="/"
+            className="text-lg font-semibold text-gray-900 flex items-center"
+          >
+            <span className="bg-gray-800 text-white p-1.5 rounded-md mr-2">
+              <FiShoppingCart size={16} />
+            </span>
+            ShopPlus
+          </Link>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex items-center space-x-8 ml-10">
+          {/* Desktop Navigation Links - Compact */}
+          <div className="hidden lg:flex items-center space-x-6 ml-8">
             <Link
               to="/"
-              className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 py-2 border-b-2 border-transparent hover:border-blue-600"
+              className="text-sm text-gray-700 hover:text-blue-600 font-medium py-1.5 border-b-2 border-transparent hover:border-blue-600 transition-colors"
             >
               Home
             </Link>
             <Link
               to="/Home"
-              className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 py-2 border-b-2 border-transparent hover:border-blue-600"
+              className="text-sm text-gray-700 hover:text-blue-600 font-medium py-1.5 border-b-2 border-transparent hover:border-blue-600 transition-colors"
             >
               Products
             </Link>
+            {isAdmin && (
+              <Link
+                to="/orders"
+                className="text-sm text-gray-700 hover:text-blue-600 font-medium py-1.5 border-b-2 border-transparent hover:border-blue-600 transition-colors"
+              >
+                Orders
+              </Link>
+            )}
             <Link
               to="/Aboutus"
-              className="text-gray-700 hover:text-blue-600 font-medium transition-colors duration-200 py-2 border-b-2 border-transparent hover:border-blue-600"
+              className="text-sm text-gray-700 hover:text-blue-600 font-medium py-1.5 border-b-2 border-transparent hover:border-blue-600 transition-colors"
             >
-              About Us
+              About
             </Link>
           </div>
 
-          {/* Search Bar with Categories Dropdown (Desktop) */}
-          <div className="hidden lg:flex flex-1 max-w-md mx-6">
-            <div className="flex w-full">
+          {/* Search Bar - Compact */}
+          <div className="hidden lg:flex flex-1 max-w-md mx-4">
+            <div className="relative flex w-full">
               {/* Categories Dropdown */}
               <div className="relative">
                 <button
                   onClick={() => setCatDropdownOpen(!catDropdownOpen)}
-                  className="h-full bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-l-lg border-r border-gray-200 flex items-center justify-between transition-colors duration-200"
+                  className="h-full bg-gray-100 hover:bg-gray-200 text-gray-800 px-3 py-2 rounded-l-md border-r border-gray-200 flex items-center text-xs font-medium"
                 >
-                  <span className="text-sm font-medium">All Categories</span>
+                  Categories
                   <FiChevronDown
-                    className={`ml-2 transition-transform ${
+                    className={`ml-1 transition-transform ${
                       catDropdownOpen ? "rotate-180" : ""
                     }`}
-                    size={16}
+                    size={14}
                   />
                 </button>
 
                 {/* Categories Dropdown Menu */}
                 {catDropdownOpen && (
-                  <div className="absolute left-0 mt-1 w-64 bg-white rounded-md shadow-lg z-30 border border-gray-200 max-h-96 overflow-y-auto">
+                  <div className="absolute left-0 mt-1 w-56 bg-white rounded-md shadow-lg z-30 border border-gray-200 max-h-96 overflow-y-auto">
                     <div className="py-1">
                       {categories.map((category) => (
                         <div
                           key={category.name}
                           className="border-b border-gray-100"
                         >
-                          <div className="flex items-center px-4 py-2 font-medium text-gray-800">
+                          <div className="flex items-center px-3 py-2 text-sm font-medium text-gray-800">
                             {category.icon}
                             <span className="ml-2">{category.name}</span>
                           </div>
@@ -285,7 +264,7 @@ const Navbar = () => {
                                 navigate(sub.path);
                                 setCatDropdownOpen(false);
                               }}
-                              className="flex items-center w-full text-left px-8 py-2 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600"
+                              className="flex items-center w-full text-left px-6 py-1.5 text-xs text-gray-600 hover:bg-blue-50 hover:text-blue-600"
                             >
                               {sub.icon && (
                                 <span className="mr-2">{sub.icon}</span>
@@ -302,80 +281,73 @@ const Navbar = () => {
 
               {/* Search Input */}
               <div className="relative flex-1">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value);
-                      setShowSuggestions(true);
-                    }}
-                    onKeyDown={handleKeyDown}
-                    onFocus={() => setShowSuggestions(true)}
-                    onBlur={() =>
-                      setTimeout(() => setShowSuggestions(false), 200)
-                    }
-                    placeholder="Search for products..."
-                    className="w-full border border-gray-200 py-2.5 pl-4 pr-10 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-gray-400"
-                  />
-                  {showSuggestions && suggestions.length > 0 && (
-                    <ul className="absolute z-20 left-0 mt-1 w-full bg-white border border-gray-300 rounded shadow-md max-h-60 overflow-y-auto text-sm">
-                      {suggestions.map((product) => (
-                        <li
-                          key={product._id}
-                          onMouseDown={(e) => e.preventDefault()} // Prevent blur before click
-                          onClick={() => {
-                            const keyword = product.name; // or product.name.split(" ")[0] if you want only the first word
-                            setSearchQuery(keyword);
-                            navigate(
-                              `/search?q=${encodeURIComponent(
-                                product.name.split(" ")[0]
-                              )}`
-                            );
-                            setShowSuggestions(false);
-                          }}
-                          className="px-4 py-2 cursor-pointer hover:bg-gray-100"
-                        >
-                          {product.name}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowSuggestions(true);
+                  }}
+                  onKeyDown={handleKeyDown}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  placeholder="Search products..."
+                  className="w-full border border-gray-200 py-2 pl-3 pr-8 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs placeholder-gray-400"
+                />
+                {showSuggestions && suggestions.length > 0 && (
+                  <ul className="absolute z-20 left-0 mt-1 w-full bg-white border border-gray-300 rounded shadow-md max-h-60 overflow-y-auto text-xs">
+                    {suggestions.map((product) => (
+                      <li
+                        key={product._id}
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setSearchQuery(product.name.split(" ")[0]);
+                          navigate(
+                            `/search?q=${encodeURIComponent(
+                              product.name.split(" ")[0]
+                            )}`
+                          );
+                          setShowSuggestions(false);
+                        }}
+                        className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                      >
+                        {product.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
 
               {/* Search Button */}
               <button
                 onClick={handleSearch}
-                className="bg-[#4c4c4c] hover:bg-gray-700 text-white px-4 py-2.5 rounded-r-lg transition-colors duration-200"
+                className="bg-gray-800 hover:bg-gray-700 text-white px-3 py-2 rounded-r-md transition-colors"
               >
-                <FiSearch size={18} />
+                <FiSearch size={16} />
               </button>
             </div>
           </div>
 
-          {/* Icons (Desktop) */}
-          <div className="hidden lg:flex items-center space-x-6">
+          {/* Icons - Compact */}
+          <div className="hidden lg:flex items-center space-x-5">
             <Link
               to="/wishlist"
-              className="relative text-gray-500 hover:text-gray-700 transition-colors duration-200"
-              aria-label="Wishlist"
+              className="relative text-gray-500 hover:text-gray-700"
             >
-              <FiHeart size={20} />
+              <FiHeart size={18} />
               {wishlist.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
                   {wishlist.length}
                 </span>
               )}
             </Link>
             <Link
               to="/cart"
-              className="relative text-gray-500 hover:text-gray-700 transition-colors duration-200"
-              aria-label="Shopping Cart"
+              className="relative text-gray-500 hover:text-gray-700"
             >
-              <FiShoppingCart size={20} />
+              <FiShoppingCart size={18} />
               {user && cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
@@ -383,7 +355,7 @@ const Navbar = () => {
             {isAdmin && (
               <Link
                 to="/admin/inventory"
-                className="ml-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium rounded-lg hover:bg-gray-800 transition-all shadow-sm"
+                className="ml-2 px-3 py-1.5 bg-gray-800 text-white text-xs font-medium rounded-md hover:bg-gray-700 transition-all"
               >
                 Dashboard
               </Link>
@@ -393,17 +365,17 @@ const Navbar = () => {
           {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center space-x-4">
             <Link to="/wishlist" className="relative text-gray-500">
-              <FiHeart size={20} />
+              <FiHeart size={18} />
               {wishlist.length > 0 && (
-                <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
                   {wishlist.length}
                 </span>
               )}
             </Link>
             <Link to="/cart" className="relative text-gray-500">
-              <FiShoppingCart size={20} />
+              <FiShoppingCart size={18} />
               {user && cartCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
                   {cartCount}
                 </span>
               )}
@@ -411,126 +383,165 @@ const Navbar = () => {
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="text-gray-500 focus:outline-none"
-              aria-label="Toggle menu"
             >
-              {menuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
+              {menuOpen ? <FiX size={20} /> : <FiMenu size={20} />}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Search and Categories - Always visible on mobile */}
+      <div className="lg:hidden bg-white border-t border-gray-100 px-4 py-2">
+        {/* Mobile Search */}
+        <div className="relative mb-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setShowSuggestions(true);
+            }}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setShowSuggestions(true)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+            placeholder="Search products..."
+            className="w-full border border-gray-200 rounded-md py-2 pl-3 pr-8 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs placeholder-gray-400"
+          />
+          <button
+            onClick={handleSearch}
+            className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400"
+          >
+            <FiSearch size={16} />
+          </button>
+          {showSuggestions && suggestions.length > 0 && (
+            <ul className="absolute z-20 left-0 mt-1 w-full bg-white border border-gray-300 rounded shadow-md max-h-60 overflow-y-auto text-xs">
+              {suggestions.map((product) => (
+                <li
+                  key={product._id}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => {
+                    setSearchQuery(product.name.split(" ")[0]);
+                    navigate(
+                      `/search?q=${encodeURIComponent(
+                        product.name.split(" ")[0]
+                      )}`
+                    );
+                    setShowSuggestions(false);
+                  }}
+                  className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                >
+                  {product.name}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Mobile Categories */}
+        <div>
+          <button
+            onClick={() => setMobileCatOpen(!mobileCatOpen)}
+            className="w-full flex justify-between items-center py-2 px-2 text-sm text-gray-700 hover:bg-gray-50 rounded"
+          >
+            <div className="flex items-center">
+              <FiGrid className="text-gray-500 mr-2" size={16} />
+              Categories
+            </div>
+            <FiChevronDown
+              className={`transition-transform text-gray-400 ${
+                mobileCatOpen ? "rotate-180" : ""
+              }`}
+              size={14}
+            />
+          </button>
+
+          {mobileCatOpen && (
+            <div className="mt-1 ml-5 space-y-1">
+              {categories.map((category, index) => (
+                <div key={index} className="pt-1">
+                  <div className="flex items-center text-sm font-medium text-gray-900">
+                    <span className="mr-2">{category.icon}</span>
+                    {category.name}
+                  </div>
+                  <ul className="mt-1 ml-5 space-y-0.5">
+                    {category.subcategories.map((subcat, subIndex) => (
+                      <li key={subIndex}>
+                        <Link
+                          to={subcat.path}
+                          onClick={() => setMenuOpen(false)}
+                          className="block py-1 text-xs text-gray-600 hover:text-blue-500"
+                        >
+                          {subcat.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Mobile Menu - Compact */}
       {menuOpen && (
         <div className="lg:hidden bg-white border-t border-gray-100">
-          <div className="px-4 pt-3 pb-4 space-y-4">
+          <div className="px-4 pt-2 pb-3 space-y-3">
             {/* Mobile Navigation Links */}
             <div className="space-y-1">
               <Link
                 to="/"
                 onClick={() => setMenuOpen(false)}
-                className="block py-3 px-2 text-gray-700 hover:text-blue-500 hover:bg-gray-50 rounded-md transition-colors duration-150 font-medium"
+                className="block py-2 px-2 text-sm text-gray-700 hover:text-blue-500 hover:bg-gray-50 rounded transition-colors"
               >
                 Home
               </Link>
               <Link
                 to="/home"
                 onClick={() => setMenuOpen(false)}
-                className="block py-3 px-2 text-gray-700 hover:text-blue-500 hover:bg-gray-50 rounded-md transition-colors duration-150 font-medium"
+                className="block py-2 px-2 text-sm text-gray-700 hover:text-blue-500 hover:bg-gray-50 rounded transition-colors"
               >
                 Products
               </Link>
+              {isAdmin && (
+                <Link
+                  to="/orders"
+                  onClick={() => setMenuOpen(false)}
+                  className="block py-2 px-2 text-sm text-gray-700 hover:text-blue-500 hover:bg-gray-50 rounded transition-colors"
+                >
+                  Orders
+                </Link>
+              )}
               <Link
                 to="/about-us"
                 onClick={() => setMenuOpen(false)}
-                className="block py-3 px-2 text-gray-700 hover:text-blue-500 hover:bg-gray-50 rounded-md transition-colors duration-150 font-medium"
+                className="block py-2 px-2 text-sm text-gray-700 hover:text-blue-500 hover:bg-gray-50 rounded transition-colors"
               >
                 About Us
               </Link>
             </div>
 
-            {/* Mobile Search */}
-            <div className="relative">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for products..."
-                className="w-full border border-gray-200 rounded-lg py-2.5 pl-4 pr-10 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-sm placeholder-gray-400"
-              />
-              <button
-                onClick={handleSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              >
-                <FiSearch size={18} />
-              </button>
-            </div>
-
-            {/* Mobile Categories */}
-            <div>
-              <button
-                onClick={() => setMobileCatOpen(!mobileCatOpen)}
-                className="w-full flex justify-between items-center py-3 px-2 text-gray-700 font-medium hover:bg-gray-50 rounded-md"
-              >
-                <div className="flex items-center">
-                  <FiGrid className="text-gray-500 mr-2" size={18} />
-                  Categories
-                </div>
-                <FiChevronDown
-                  className={`transition-transform text-gray-400 ${
-                    mobileCatOpen ? "rotate-180" : ""
-                  }`}
-                  size={16}
-                />
-              </button>
-
-              {mobileCatOpen && (
-                <div className="mt-2 ml-6 space-y-2">
-                  {categories.map((category, index) => (
-                    <div key={index} className="pt-2">
-                      <div className="flex items-center font-medium text-gray-900">
-                        <span className="mr-2">{category.icon}</span>
-                        {category.name}
-                      </div>
-                      <ul className="mt-1 ml-6 space-y-1">
-                        {category.subcategories.map((subcat, subIndex) => (
-                          <li key={subIndex}>
-                            <Link
-                              to={subcat.path}
-                              onClick={() => setMenuOpen(false)}
-                              className="block py-1.5 text-gray-600 hover:text-blue-500 transition-colors duration-150"
-                            >
-                              {subcat.name}
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
             {/* Mobile Account Links */}
-            <div className="border-t border-gray-100 pt-3 space-y-2">
+            <div className="border-t border-gray-100 pt-2 space-y-1">
               <Link
                 to="/account"
                 onClick={() => setMenuOpen(false)}
-                className="block py-2.5 px-2 text-gray-700 hover:text-blue-500 hover:bg-gray-50 rounded-md transition-colors duration-150 flex items-center"
+                className="block py-2 px-2 text-sm text-gray-700 hover:text-blue-500 hover:bg-gray-50 rounded flex items-center"
               >
-                <FiUser className="mr-2" size={16} /> Account
+                <FiUser className="mr-2" size={14} /> Account
               </Link>
               <Link
                 to="/wishlist"
                 onClick={() => setMenuOpen(false)}
-                className="block py-2.5 px-2 text-gray-700 hover:text-blue-500 hover:bg-gray-50 rounded-md transition-colors duration-150 flex items-center"
+                className="block py-2 px-2 text-sm text-gray-700 hover:text-blue-500 hover:bg-gray-50 rounded flex items-center"
               >
-                <FiHeart className="mr-2" size={16} /> Wishlist
+                <FiHeart className="mr-2" size={14} /> Wishlist
               </Link>
               {isAdmin && (
                 <Link
                   to="/admin/inventory"
                   onClick={() => setMenuOpen(false)}
-                  className="block py-2.5 px-2 text-gray-900 font-medium hover:bg-gray-50 rounded-md"
+                  className="block py-2 px-2 text-sm text-gray-900 font-medium hover:bg-gray-50 rounded"
                 >
                   Admin Dashboard
                 </Link>

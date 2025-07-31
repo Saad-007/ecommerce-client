@@ -331,77 +331,112 @@ const filteredProducts = products.filter((product) => {
           </div>
         )}
       </section>
-{/* Premium Features Section - Responsive */}
-<section className="py-16 bg-gradient-to-b from-white to-gray-50">
-  <div className="container mx-auto px-4 sm:px-6">
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-      {/* Feature 1 - Shipping */}
-      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xs hover:shadow-sm transition-all duration-300 border border-gray-100">
-        <div className="bg-blue-50 p-3 sm:p-4 rounded-full w-max mx-auto mb-3 sm:mb-4">
-          <FiTruck className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
-        </div>
-        <h3 className="text-lg sm:text-xl font-medium sm:font-semibold text-center text-gray-800 mb-1 sm:mb-2">
-          Free Shipping
-        </h3>
-        <p className="text-gray-500 text-xs sm:text-sm text-center">
-          On all orders over $50
-        </p>
-        <div className="mt-3 sm:mt-4 text-center">
-          <span className="inline-block h-1 w-6 sm:w-8 bg-blue-400 rounded-full"></span>
-        </div>
-      </div>
+{/* Ultimate Minimal Premium Features */}
+{/* Our Promise - Elevated Design */}
+<section className="py-28 bg-[#f8f8f8] relative overflow-hidden">
+  {/* Decorative elements */}
+  <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+    <div className="absolute top-20 left-10 w-40 h-40 rounded-full bg-[#4c4c4c]/5 blur-xl"></div>
+    <div className="absolute bottom-10 right-20 w-60 h-60 rounded-full bg-[#4c4c4c]/5 blur-xl"></div>
+  </div>
 
-      {/* Feature 2 - Security */}
-      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xs hover:shadow-sm transition-all duration-300 border border-gray-100">
-        <div className="bg-green-50 p-3 sm:p-4 rounded-full w-max mx-auto mb-3 sm:mb-4">
-          <FiShield className="w-6 h-6 sm:w-8 sm:h-8 text-green-500" />
-        </div>
-        <h3 className="text-lg sm:text-xl font-medium sm:font-semibold text-center text-gray-800 mb-1 sm:mb-2">
-          Secure Payment
-        </h3>
-        <p className="text-gray-500 text-xs sm:text-sm text-center">
-          256-bit encryption
-        </p>
-        <div className="mt-3 sm:mt-4 text-center">
-          <span className="inline-block h-1 w-6 sm:w-8 bg-green-400 rounded-full"></span>
-        </div>
-      </div>
+  <div className="max-w-6xl mx-auto px-6 text-center relative z-10">
+    {/* Animated badge */}
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6 }}
+      className="inline-block px-6 py-2.5 bg-white rounded-full shadow-sm mb-8 border border-[#4c4c4c]/10"
+    >
+      <p className="text-sm text-[#4c4c4c]/80 tracking-widest">OUR COMMITMENT TO YOU</p>
+    </motion.div>
 
-      {/* Feature 3 - Returns */}
-      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xs hover:shadow-sm transition-all duration-300 border border-gray-100">
-        <div className="bg-purple-50 p-3 sm:p-4 rounded-full w-max mx-auto mb-3 sm:mb-4">
-          <FiCreditCard className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500" />
-        </div>
-        <h3 className="text-lg sm:text-xl font-medium sm:font-semibold text-center text-gray-800 mb-1 sm:mb-2">
-          Easy Returns
-        </h3>
-        <p className="text-gray-500 text-xs sm:text-sm text-center">
-          30-day guarantee
-        </p>
-        <div className="mt-3 sm:mt-4 text-center">
-          <span className="inline-block h-1 w-6 sm:w-8 bg-purple-400 rounded-full"></span>
-        </div>
-      </div>
-
-      {/* Feature 4 - Support */}
-      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-xs hover:shadow-sm transition-all duration-300 border border-gray-100">
-        <div className="bg-amber-50 p-3 sm:p-4 rounded-full w-max mx-auto mb-3 sm:mb-4">
-          <FiHeadphones className="w-6 h-6 sm:w-8 sm:h-8 text-amber-500" />
-        </div>
-        <h3 className="text-lg sm:text-xl font-medium sm:font-semibold text-center text-gray-800 mb-1 sm:mb-2">
-          24/7 Support
-        </h3>
-        <p className="text-gray-500 text-xs sm:text-sm text-center">
-          Dedicated service
-        </p>
-        <div className="mt-3 sm:mt-4 text-center">
-          <span className="inline-block h-1 w-6 sm:w-8 bg-amber-400 rounded-full"></span>
-        </div>
-      </div>
+    {/* Headline with gradient text */}
+    <motion.h2 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.6, delay: 0.2 }}
+      className="text-4xl md:text-5xl font-light text-[#4c4c4c] mb-12 leading-tight"
+    >
+      We Deliver <span className="font-medium bg-clip-text text-transparent bg-gradient-to-r from-[#4c4c4c] to-[#7a7a7a]">Exceptional Quality</span> <br className="hidden md:block" /> 
+      & <span className="italic">Unparalleled</span> Service
+    </motion.h2>
+    
+    {/* Features grid with animated cards */}
+    <div className="grid md:grid-cols-3 gap-8">
+      {[
+        {
+          icon: <FiAward className="w-8 h-8" />,
+          title: "Curated Excellence",
+          desc: "Each product is hand-selected by our experts for quality and design",
+          color: "from-[#6a6a6a] to-[#4c4c4c]"
+        },
+        {
+          icon: <FiEdit3 className="w-8 h-8" />,
+          title: "Thoughtful Details",
+          desc: "From packaging to delivery, every touchpoint is carefully considered",
+          color: "from-[#5e5e5e] to-[#4c4c4c]"
+        },
+        {
+          icon: <FiStar className="w-8 h-8" />,
+          title: "Lasting Relationships",
+          desc: "We're here for you beyond the purchase with ongoing support",
+          color: "from-[#525252] to-[#4c4c4c]"
+        }
+      ].map((item, index) => (
+        <motion.div 
+          key={index}
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: index * 0.15 }}
+          whileHover={{ y: -8 }}
+          className="group relative"
+        >
+          {/* Card background */}
+          <div className="absolute inset-0 bg-white rounded-xl shadow-sm group-hover:shadow-md transition-all duration-300 transform group-hover:-translate-y-2"></div>
+          
+          {/* Card content */}
+          <div className="relative h-full bg-white rounded-xl p-8 border border-[#4c4c4c]/10 overflow-hidden">
+            {/* Gradient accent */}
+            <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${item.color}`}></div>
+            
+            {/* Icon container */}
+            <div className="w-24 h-24 mx-auto mb-6 flex items-center justify-center rounded-full bg-[#4c4c4c]/5 group-hover:bg-[#4c4c4c]/10 transition-colors duration-300">
+              <div className="w-20 h-20 flex items-center justify-center rounded-full bg-gradient-to-br ${item.color} text-white">
+                {item.icon}
+              </div>
+            </div>
+            
+            {/* Text content */}
+            <h3 className="text-xl font-medium text-[#4c4c4c] mb-3">{item.title}</h3>
+            <p className="text-[#4c4c4c]/70">{item.desc}</p>
+            
+            {/* Hover effect indicator */}
+            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="w-16 h-0.5 bg-gradient-to-r from-transparent via-[#4c4c4c]/50 to-transparent"></div>
+            </div>
+          </div>
+        </motion.div>
+      ))}
     </div>
+
+    {/* Subtle CTA at bottom */}
+    <motion.div
+      initial={{ opacity: 0 }}
+      whileInView={{ opacity: 1 }}
+      transition={{ delay: 0.8 }}
+      className="mt-16"
+    >
+      <Link 
+        to="/about" 
+        className="inline-flex items-center px-8 py-3.5 border border-[#4c4c4c]/20 rounded-full text-[#4c4c4c] hover:bg-[#4c4c4c] hover:text-white transition-all duration-300 group"
+      >
+        <span>Discover Our Standards</span>
+        <FiArrowRight className="ml-3 transition-transform duration-300 group-hover:translate-x-1" />
+      </Link>
+    </motion.div>
   </div>
 </section>
-
 {/* Featured Products Gallery */}
 <section className="py-20 bg-gray-50">
   <div className="container mx-auto px-4 sm:px-6">
@@ -411,7 +446,7 @@ const filteredProducts = products.filter((product) => {
         <p className="text-gray-500">Our premium featured collection</p>
       </div>
       <Link 
-        to="/shop" 
+        to="/Home" 
         className="mt-4 md:mt-0 flex items-center text-blue-500 hover:text-blue-700 transition-colors group"
       >
         <span className="font-medium mr-2">Explore All</span>

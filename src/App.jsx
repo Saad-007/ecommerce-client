@@ -29,6 +29,7 @@ import UserAccountPage from "./components/UserAcountPage";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AboutUs from "./components/Aboutus";
+import UserOrderHistory from "./components/UserOrderHistory";
 // Static Pages
 import { ContactUs, FAQ, Shipping } from "./components/Statepages";
 
@@ -80,7 +81,7 @@ export default function App() {
                     path="/reset-password/:token"
                     element={<ResetPassword />}
                   />
-
+                  <Route path="User-Order" element={<UserOrderHistory />}/>
                   {/* Static Info Pages */}
                   <Route path="/contact" element={<ContactUs />} />
                   <Route path="/faqs" element={<FAQ />} />

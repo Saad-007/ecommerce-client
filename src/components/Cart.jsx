@@ -119,39 +119,43 @@ const handleCheckout = async () => {
   setIsProcessing(true);
 
   try {
-    // 1. Place the order
-    placeOrder(cart, selectedPayment);
-
-    // 2. ✅ Send sales data to backend
-await fetch(`${API_BASE_URL}/products/sales`, {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    items: cart.map((item) => ({
-      productId: item._id,
-      quantity: item.quantity
-    }))
-  }),
-  credentials: "include" // Optional: needed if your backend uses cookies
-});
+    // 1. First place the order (with await)
+    const newOrder = await placeOrder(cart, selectedPayment, address);
+    
+    // 2. Then send sales data
+    await fetch(`${API_BASE_URL}/sales`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        items: cart.map((item) => ({
+          productId: item._id,
+          quantity: item.quantity
+        }))
+      }),
+      credentials: "include"
+    });
 
     // 3. Send confirmation email
     await sendOrderEmail(cart, address, total);
 
-    // 4. Clear cart and navigate
+    // 4. Clear cart and navigate to success page
     clearCart();
-    navigate("/orders", { state: { orderSuccess: true } });
-
+    navigate("/orders", { 
+      state: { 
+        orderSuccess: true,
+        orderId: newOrder._id 
+      } 
+    });
+    
   } catch (error) {
-    console.error("Checkout error:", error);
-    alert("Failed to complete checkout. Please try again.");
+    console.error("Full checkout error:", error);
+    alert(`Checkout failed: ${error.message || "Please try again later"}`);
   } finally {
     setIsProcessing(false);
   }
 };
-
 
 
   return (

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useOrders } from "../context/OrderContext";
-
-
+import { safeFormat } from "../utils/dateUtils";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FiEdit,
   FiLogOut,
@@ -21,14 +21,13 @@ import {
 } from "react-icons/fi";
 import { Bar, Pie } from "react-chartjs-2";
 import { Chart, registerables } from "chart.js";
-import { format } from "date-fns";
 import { Switch } from "@headlessui/react";
 
 Chart.register(...registerables);
 
 const AccountPage = () => {
   const { user, logout } = useAuth();
-  const { orders, updateOrderStatus } = useOrders();
+const { orders, updateOrderStatus, fetchOrders } = useOrders();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [storeStats, setStoreStats] = useState({
     totalRevenue: 0,
@@ -44,56 +43,129 @@ const AccountPage = () => {
     joinDate: "",
   });
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [updatingOrderIds, setUpdatingOrderIds] = useState(new Set());
 
-  // Initialize admin data from user context
+useEffect(() => {
+  if (orders.length > 0) {
+    const paidNonCancelledOrders = orders.filter(
+      (order) =>
+        order.status?.toLowerCase() !== "cancelled" &&
+        order.paymentStatus?.toLowerCase() === "paid"
+    );
+
+    const totalRevenue = paidNonCancelledOrders.reduce(
+      (sum, order) => sum + (order.total || 0),
+      0
+    );
+
+    const currentMonth = safeFormat(new Date(), "yyyy-MM");
+
+    const monthlyRevenue = paidNonCancelledOrders
+      .filter((order) => safeFormat(order.date, "yyyy-MM") === currentMonth)
+      .reduce((sum, order) => sum + (order.total || 0), 0);
+
+    setStoreStats({
+      totalRevenue,
+      monthlyRevenue,
+      totalOrders: paidNonCancelledOrders.length, // Now excludes cancelled orders // This still includes cancelled orders - change if needed
+      activeCustomers: new Set(orders.map((order) => order.customerEmail)).size,
+    });
+  }
+}, [orders]);
+
+const handleStatusChange = async (orderId, newStatus) => {
+  setUpdatingOrderIds((prev) => new Set(prev).add(orderId));
+  try {
+    await updateOrderStatus(orderId, newStatus);
+    await fetchOrders(); // 👈 Force refetch to get updated status
+  } finally {
+    setUpdatingOrderIds((prev) => {
+      const copy = new Set(prev);
+      copy.delete(orderId);
+      return copy;
+    });
+  }
+};
+
+
   useEffect(() => {
     if (user) {
       setAdminData({
         name: user.name || "Admin",
         email: user.email || "",
         phone: user.phone || "Not provided",
-        joinDate: user.createdAt
-          ? format(new Date(user.createdAt), "MMMM d, yyyy")
-          : "Unknown",
+        joinDate: safeFormat(user.createdAt, "MMMM d, yyyy"),
       });
     }
   }, [user]);
 
   // Calculate store statistics
-  useEffect(() => {
-    if (orders.length > 0) {
-      const totalRevenue = orders.reduce(
-        (sum, order) => sum + (order.total || 0),
-        0
-      );
-      const currentMonth = format(new Date(), "yyyy-MM");
-      const monthlyRevenue = orders
-        .filter(
-          (order) => format(new Date(order.date), "yyyy-MM") === currentMonth
-        )
-        .reduce((sum, order) => sum + (order.total || 0), 0);
+useEffect(() => {
+  if (orders.length > 0) {
+    console.log("Raw orders:", orders); // Debug: Check original data
 
-      setStoreStats({
-        totalRevenue,
-        monthlyRevenue,
-        totalOrders: orders.length,
-        activeCustomers: new Set(orders.map((order) => order.customerEmail))
-          .size,
-      });
-    }
-  }, [orders]);
+    // 1. Filter out cancelled orders (case-insensitive)
+    const nonCancelledOrders = orders.filter(
+      (order) => !order.status || !order.status.toLowerCase().includes("cancel")
+    );
+    console.log("Non-cancelled orders:", nonCancelledOrders); // Should show 2 orders
 
-  const last7Days = [...Array(7)].map((_, i) => {
-    const date = new Date();
-    date.setDate(date.getDate() - i);
-    return format(date, "MMM d");
-  }).reverse();
+    // 2. Option A: Include ONLY paid orders (strict)
+    // const validOrders = nonCancelledOrders.filter(
+    //   (order) => order.paymentStatus?.toLowerCase() === "paid"
+    // );
+
+    // 2. Option B: Include ALL non-cancelled orders (recommended)
+    const validOrders = nonCancelledOrders;
+    console.log("Valid orders (non-cancelled):", validOrders);
+
+    // 3. Calculate totals
+    const totalRevenue = validOrders.reduce(
+      (sum, order) => sum + (Number(order.total) || 0),
+      0
+    );
+
+    const currentMonth = safeFormat(new Date(), "yyyy-MM");
+    const monthlyRevenue = validOrders
+      .filter((order) => safeFormat(order.date, "yyyy-MM") === currentMonth)
+      .reduce((sum, order) => sum + (Number(order.total) || 0), 0);
+
+    console.log("Calculated stats:", { 
+      totalRevenue, 
+      monthlyRevenue,
+      totalOrders: validOrders.length,
+      activeCustomers: new Set(validOrders.map((o) => o.customerEmail)).size
+    });
+
+    setStoreStats({
+      totalRevenue,
+      monthlyRevenue,
+      totalOrders: validOrders.length,
+      activeCustomers: new Set(validOrders.map((o) => o.customerEmail)).size,
+    });
+  } else {
+    setStoreStats({
+      totalRevenue: 0,
+      monthlyRevenue: 0,
+      totalOrders: 0,
+      activeCustomers: 0,
+    });
+  }
+}, [orders]);
+
+  const last7Days = [...Array(7)]
+    .map((_, i) => {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      return safeFormat(date, "MMM d");
+    })
+    .reverse();
 
   const dailySalesMap = {};
   last7Days.forEach((date) => (dailySalesMap[date] = 0));
 
   orders.forEach((order) => {
-    const formattedDate = format(new Date(order.date), "MMM d");
+    const formattedDate = safeFormat(order.date, "MMM d");
     if (formattedDate in dailySalesMap) {
       dailySalesMap[formattedDate] += order.total || 0;
     }
@@ -119,10 +191,21 @@ const AccountPage = () => {
   };
 
   orders.forEach((order) => {
-    const status = order.status || "Completed";
-    statusCounts[status] = (statusCounts[status] || 0) + 1;
+    const status = (order.status || "Completed").toLowerCase();
+    switch (status) {
+      case "completed":
+        statusCounts.Completed++;
+        break;
+      case "processing":
+        statusCounts.Processing++;
+        break;
+      case "cancelled":
+        statusCounts.Cancelled++;
+        break;
+      default:
+        statusCounts.Processing++; // fallback
+    }
   });
-
   const orderStatusData = {
     labels: ["Completed", "Processing", "Cancelled"],
     datasets: [
@@ -210,7 +293,7 @@ const AccountPage = () => {
                   Store Dashboard
                 </h1>
                 <div className="text-sm text-gray-500">
-                  Last updated: {format(new Date(), "MMMM d, yyyy h:mm a")}
+                  Last updated: {safeFormat(new Date(), "MMMM d, yyyy h:mm a")}
                 </div>
               </div>
 
@@ -298,8 +381,9 @@ const AccountPage = () => {
               <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-medium">Recent Orders</h3>
+
                   <button className="text-sm text-indigo-600 hover:text-indigo-800">
-                    View All Orders
+                    <Link to="/orders"> View All Orders</Link>
                   </button>
                 </div>
                 <div className="overflow-x-auto">
@@ -318,41 +402,35 @@ const AccountPage = () => {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Amount
                         </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Status
-                        </th>
+                        {/* Removed Status column header */}
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {orders.slice(0, 5).map((order) => (
-                        <tr key={order.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            #{order.id.slice(0, 8)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {format(new Date(order.date), "MMM d, yyyy")}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {order.customerEmail || "Guest"}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            ${order.total?.toFixed(2)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <select
-                              value={order.status || "Processing"}
-                              onChange={(e) =>
-                                updateOrderStatus(order.id, e.target.value)
-                              }
-                              className="text-sm bg-white border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-200 focus:border-indigo-500 transition-all"
-                            >
-                              <option value="Processing">Processing</option>
-                              <option value="Completed">Completed</option>
-                              <option value="Cancelled">Cancelled</option>
-                            </select>
-                          </td>
-                        </tr>
-                      ))}
+                      {orders.map((order) => {
+                        const orderId = order._id || order.id;
+                        return (
+                          <tr key={orderId} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              #{orderId?.slice(-6) || "N/A"}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {safeFormat(
+                                order.date || order.createdAt,
+                                "MMM d, yyyy"
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {order.customerEmail ||
+                                order.user?.email ||
+                                "Guest"}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              ${order.total?.toFixed(2) || "0.00"}
+                            </td>
+                            {/* Removed Status cell */}
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -556,7 +634,7 @@ const AccountPage = () => {
                           Last Login
                         </label>
                         <p className="text-gray-800 font-medium">
-                          {format(new Date(), "MMMM d, yyyy 'at' h:mm a")}
+                          {safeFormat(new Date(), "MMMM d, yyyy 'at' h:mm a")}
                         </p>
                       </div>
                     </div>
