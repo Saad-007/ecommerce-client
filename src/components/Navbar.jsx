@@ -75,16 +75,32 @@ const Navbar = () => {
       icon: <MdLocalOffer className="text-pink-500" size={14} />,
       subcategories: [
         { name: "Men", icon: <MdMale size={14} />, path: "/category/male" },
-        { name: "Women", icon: <MdFemale size={14} />, path: "/category/female" },
-        { name: "Kids", icon: <MdChildCare size={14} />, path: "/category/children" },
-        { name: "Jewelry", icon: <BsGem size={14} />, path: "/category/jewelry" },
+        {
+          name: "Women",
+          icon: <MdFemale size={14} />,
+          path: "/category/female",
+        },
+        {
+          name: "Kids",
+          icon: <MdChildCare size={14} />,
+          path: "/category/children",
+        },
+        {
+          name: "Jewelry",
+          icon: <BsGem size={14} />,
+          path: "/category/jewelry",
+        },
       ],
     },
     {
       name: "Electronics",
       icon: <MdLaptop className="text-blue-500" size={14} />,
       subcategories: [
-        { name: "Phones", icon: <MdPhoneIphone size={14} />, path: "/category/phones" },
+        {
+          name: "Phones",
+          icon: <MdPhoneIphone size={14} />,
+          path: "/category/phones",
+        },
         { name: "Laptops", path: "/category/laptops" },
         { name: "Accessories", path: "/category/accessories" },
       ],
@@ -307,7 +323,9 @@ const Navbar = () => {
                   }}
                   onKeyDown={handleKeyDown}
                   onFocus={() => setShowSuggestions(true)}
-                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  onBlur={() =>
+                    setTimeout(() => setShowSuggestions(false), 200)
+                  }
                   placeholder="Search products..."
                   className="w-full border border-gray-200 py-2 pl-3 pr-8 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-xs placeholder-gray-400"
                 />
@@ -347,28 +365,35 @@ const Navbar = () => {
 
           {/* Icons - Compact */}
           <div className="hidden lg:flex items-center space-x-5">
-            <Link
-              to="/wishlist"
-              className="relative text-gray-500 hover:text-gray-700"
-            >
-              <FiHeart size={18} />
-              {wishlist.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
-                  {wishlist.length}
-                </span>
-              )}
-            </Link>
-            <Link
-              to="/cart"
-              className="relative text-gray-500 hover:text-gray-700"
-            >
-              <FiShoppingCart size={18} />
-              {user && cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
+            {user && !isAdmin && (
+              <>
+                {/* Wishlist Link */}
+                <Link
+                  to="/wishlist"
+                  className="relative text-gray-500 hover:text-gray-700"
+                >
+                  <FiHeart size={18} />
+                  {wishlist.length > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                      {wishlist.length}
+                    </span>
+                  )}
+                </Link>
+
+                {/* Cart Link */}
+                <Link
+                  to="/cart"
+                  className="relative text-gray-500 hover:text-gray-700"
+                >
+                  <FiShoppingCart size={18} />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
+              </>
+            )}
             {isAdmin && (
               <Link
                 to="/admin/inventory"
@@ -381,22 +406,26 @@ const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <div className="lg:hidden flex items-center space-x-4">
-            <Link to="/wishlist" className="relative text-gray-500">
-              <FiHeart size={18} />
-              {wishlist.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
-                  {wishlist.length}
-                </span>
-              )}
-            </Link>
-            <Link to="/cart" className="relative text-gray-500">
-              <FiShoppingCart size={18} />
-              {user && cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
-                  {cartCount}
-                </span>
-              )}
-            </Link>
+            {user && !isAdmin && (
+              <>
+                <Link to="/wishlist" className="relative text-gray-500">
+                  <FiHeart size={18} />
+                  {wishlist.length > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                      {wishlist.length}
+                    </span>
+                  )}
+                </Link>
+                <Link to="/cart" className="relative text-gray-500">
+                  <FiShoppingCart size={18} />
+                  {user && cartCount > 0 && (
+                    <span className="absolute -top-1.5 -right-1.5 bg-blue-500 text-white text-[10px] rounded-full h-4 w-4 flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
+                </Link>
+              </>
+            )}
             <button
               onClick={() => setMenuOpen(!menuOpen)}
               className="text-gray-500 focus:outline-none"
