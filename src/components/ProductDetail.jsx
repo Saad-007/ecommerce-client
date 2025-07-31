@@ -13,13 +13,12 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiImage,
-  FiTag
+  FiTag,
 } from "react-icons/fi";
 import { TbDiscount } from "react-icons/tb";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { motion, AnimatePresence } from "framer-motion";
-
 
 const colors = [
   { value: "red", label: "Red", hex: "#ef4444" },
@@ -71,42 +70,48 @@ export default function ProductDetail() {
   const [averageRating, setAverageRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
+  const API_BASE_URL =
+    import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 
- useEffect(() => {
-  const fetchReviews = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/reviews?productId=${id}`, {
-        credentials: "include", // if your backend requires auth cookies
-      });
-      if (!response.ok) {
-        throw new Error("Failed to fetch reviews");
+  useEffect(() => {
+    const fetchReviews = async () => {
+      try {
+        const response = await fetch(
+          `${API_BASE_URL}/reviews?productId=${id}`,
+          {
+            credentials: "include", // if your backend requires auth cookies
+          }
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch reviews");
+        }
+        const data = await response.json();
+
+        const reviewsData = data.map((review) => ({
+          ...review,
+          createdAt: new Date(review.createdAt).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          }),
+          id: review._id || review.id,
+        }));
+
+        const totalRating = reviewsData.reduce((sum, r) => sum + r.rating, 0);
+        setReviews(reviewsData);
+        setAverageRating(
+          reviewsData.length ? totalRating / reviewsData.length : 0
+        );
+      } catch (err) {
+        console.error("Failed to fetch reviews:", err);
+        toast.error("Failed to load reviews");
       }
-      const data = await response.json();
+    };
 
-      const reviewsData = data.map((review) => ({
-        ...review,
-        createdAt: new Date(review.createdAt).toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        }),
-        id: review._id || review.id,
-      }));
-
-      const totalRating = reviewsData.reduce((sum, r) => sum + r.rating, 0);
-      setReviews(reviewsData);
-      setAverageRating(reviewsData.length ? totalRating / reviewsData.length : 0);
-    } catch (err) {
-      console.error("Failed to fetch reviews:", err);
-      toast.error("Failed to load reviews");
+    if (id) {
+      fetchReviews();
     }
-  };
-
-  if (id) {
-    fetchReviews();
-  }
-}, [id]);
+  }, [id]);
   const product = products?.find((p) => String(p.id) === id);
 
   if (!product) {
@@ -214,23 +219,22 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000
     e.preventDefault();
     setIsSubmitting(true);
 
- 
-try {
-  const response = await fetch(`${API_BASE_URL}/reviews`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      productId: id,
-      productName: name,
-      rating: newReview.rating,
-      comment: newReview.comment,
-      name: newReview.name,
-      email: newReview.email,
-    }),
-    credentials: "include", // optional, only if your backend uses cookies
-  });
+    try {
+      const response = await fetch(`${API_BASE_URL}/reviews`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          productId: id,
+          productName: name,
+          rating: newReview.rating,
+          comment: newReview.comment,
+          name: newReview.name,
+          email: newReview.email,
+        }),
+        credentials: "include", // optional, only if your backend uses cookies
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -367,7 +371,9 @@ try {
                         <motion.button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setActiveImageIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+                            setActiveImageIndex((prev) =>
+                              prev === 0 ? images.length - 1 : prev - 1
+                            );
                           }}
                           className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full w-10 h-10 items-center justify-center shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110"
                           whileHover={{ scale: 1.1 }}
@@ -378,7 +384,9 @@ try {
                         <motion.button
                           onClick={(e) => {
                             e.stopPropagation();
-                            setActiveImageIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+                            setActiveImageIndex((prev) =>
+                              prev === images.length - 1 ? 0 : prev + 1
+                            );
                           }}
                           className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full w-10 h-10 items-center justify-center shadow-md backdrop-blur-sm transition-all duration-200 hover:scale-110"
                           whileHover={{ scale: 1.1 }}
@@ -392,7 +400,9 @@ try {
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 text-gray-500 rounded-xl">
                     <FiImage className="w-12 h-12 mb-3 opacity-60" />
-                    <span className="text-sm md:text-base">No image available</span>
+                    <span className="text-sm md:text-base">
+                      No image available
+                    </span>
                   </div>
                 )}
 
@@ -435,7 +445,9 @@ try {
                       <div
                         key={index}
                         className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                          activeImageIndex === index ? 'bg-blue-500 w-4' : 'bg-gray-300'
+                          activeImageIndex === index
+                            ? "bg-blue-500 w-4"
+                            : "bg-gray-300"
                         }`}
                       />
                     ))}
@@ -453,8 +465,8 @@ try {
                         onClick={() => setActiveImageIndex(index)}
                         className={`flex-shrink-0 w-16 h-16 md:w-full md:h-20 lg:h-24 rounded-xl overflow-hidden cursor-pointer border-2 transition-all duration-300 ${
                           activeImageIndex === index
-                            ? 'border-blue-500 shadow-md scale-[1.02]'
-                            : 'border-transparent hover:border-gray-300'
+                            ? "border-blue-500 shadow-md scale-[1.02]"
+                            : "border-transparent hover:border-gray-300"
                         }`}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.98 }}
@@ -479,7 +491,6 @@ try {
                 Click to zoom
               </div>
             </div>
-
 
             {/* Product Details */}
             <div className="space-y-6">
@@ -885,81 +896,83 @@ try {
               </div>
             </div>
           </div>
-            {/* You May Also Like Section */}
-<div className="border-t border-gray-200 px-4 sm:px-8 py-12 bg-gray-50/80">
-  <div className="max-w-7xl mx-auto">
-    <h2 className="text-2xl font-bold text-gray-900 mb-8">You May Also Like</h2>
-    
-    {/* Mobile Carousel - 2-3 products per row */}
-    <div className="lg:hidden relative overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory hide-scrollbar">
-      <div className="flex space-x-4 w-max">
-        {products
-          .filter(p => 
-            p.category === product.category && 
-            p.id !== product.id
-          )
-          .slice(0, 6) // Show max 6 related products
-          .map(relatedProduct => (
-            <div 
-              key={relatedProduct.id}
-              className="w-[calc(50vw-1.5rem)] sm:w-[calc(33.3vw-1.5rem)] flex-shrink-0 snap-start" // 2 on mobile, 3 on sm
-            >
-              <motion.div
-                whileHover={{ y: -5 }}
-                transition={{ duration: 0.2 }}
-                className="h-full"
-              >
-                <ProductCard 
-                  product={relatedProduct}
-                  className="h-full"
-                />
-              </motion.div>
+          {/* You May Also Like Section */}
+          <div className="border-t border-gray-200 px-4 sm:px-8 py-12 bg-gray-50/80">
+            <div className="max-w-7xl mx-auto">
+              <h2 className="text-2xl font-bold text-gray-900 mb-8">
+                You May Also Like
+              </h2>
+
+              {/* Mobile Carousel - 2-3 products per row */}
+              <div className="lg:hidden relative overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory hide-scrollbar">
+                <div className="flex space-x-4 w-max">
+                  {products
+                    .filter(
+                      (p) =>
+                        p.category === product.category && p.id !== product.id
+                    )
+                    .slice(0, 6) // Show max 6 related products
+                    .map((relatedProduct) => (
+                      <div
+                        key={relatedProduct.id}
+                        className="w-[calc(50vw-1.5rem)] sm:w-[calc(33.3vw-1.5rem)] flex-shrink-0 snap-start" // 2 on mobile, 3 on sm
+                      >
+                        <motion.div
+                          whileHover={{ y: -5 }}
+                          transition={{ duration: 0.2 }}
+                          className="h-full"
+                        >
+                          <ProductCard
+                            product={relatedProduct}
+                            className="h-full"
+                          />
+                        </motion.div>
+                      </div>
+                    ))}
+                </div>
+              </div>
+
+              {/* Desktop Grid - 4 products per row */}
+              <div className="hidden lg:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                {products
+                  .filter(
+                    (p) =>
+                      p.category === product.category && p.id !== product.id
+                  )
+                  .slice(0, 4)
+                  .map((relatedProduct) => (
+                    <motion.div
+                      key={relatedProduct.id}
+                      whileHover={{ y: -5 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ProductCard
+                        product={relatedProduct}
+                        className="h-full"
+                      />
+                    </motion.div>
+                  ))}
+              </div>
+
+              {/* Fallback if no related products */}
+              {products.filter(
+                (p) => p.category === product.category && p.id !== product.id
+              ).length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No related products found in this category.
+                </div>
+              )}
             </div>
-          ))
-        }
-      </div>
-    </div>
-
-    {/* Desktop Grid - 4 products per row */}
-    <div className="hidden lg:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {products
-        .filter(p => 
-          p.category === product.category && 
-          p.id !== product.id
-        )
-        .slice(0, 4)
-        .map(relatedProduct => (
-          <motion.div
-            key={relatedProduct.id}
-            whileHover={{ y: -5 }}
-            transition={{ duration: 0.2 }}
-          >
-            <ProductCard 
-              product={relatedProduct}
-              className="h-full"
-            />
-          </motion.div>
-        ))
-      }
-    </div>
-
-    {/* Fallback if no related products */}
-    {products.filter(p => p.category === product.category && p.id !== product.id).length === 0 && (
-      <div className="text-center py-8 text-gray-500">
-        No related products found in this category.
-      </div>
-    )}
-  </div>
-</div>
-          {/* Reviews Section */}
-          <div className="border-t border-gray-200 px-8 py-8 bg-gray-50/80">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-900">
+          </div>
+          {/* Reviews Section Container */}
+          <div className="border-t border-gray-200 px-4 sm:px-6 py-6 bg-gray-50/80">
+            <div className="flex flex-col justify-between items-start mb-6">
+              <div className="w-full">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">
                   Customer Reviews
                 </h2>
-                <div className="flex items-center mt-2">
-                  <div className="flex mr-2">
+                <div className="flex flex-col sm:flex-row sm:items-center mt-2 gap-2">
+                  <div className="flex">
                     {renderStars(Math.round(averageRating))}
                   </div>
                   <span className="text-sm text-gray-600">
@@ -970,14 +983,13 @@ try {
               </div>
               <motion.button
                 onClick={() => setShowReviewForm(!showReviewForm)}
-                className="mt-4 md:mt-0 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all duration-300"
+                className="mt-4 w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium shadow-sm transition-all duration-300"
                 whileHover={{ y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
                 {showReviewForm ? "Cancel Review" : "Write a Review"}
               </motion.button>
             </div>
-
             {/* Review Form */}
             <AnimatePresence>
               {showReviewForm && (
@@ -985,7 +997,7 @@ try {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="mb-8 bg-white rounded-xl p-6 overflow-hidden shadow-sm border border-gray-200"
+                  className="mb-6 bg-white rounded-lg p-4 sm:p-6 overflow-hidden shadow-sm border border-gray-200"
                 >
                   <h3 className="text-lg font-medium mb-4 text-gray-900">
                     Share Your Experience
@@ -995,7 +1007,7 @@ try {
                       <label className="block text-sm font-medium text-gray-700 mb-2">
                         Rating
                       </label>
-                      <div className="flex">
+                      <div className="flex justify-center sm:justify-start">
                         {[1, 2, 3, 4, 5].map((star) => (
                           <button
                             key={star}
@@ -1003,10 +1015,10 @@ try {
                             onClick={() =>
                               setNewReview({ ...newReview, rating: star })
                             }
-                            className="p-1.5"
+                            className="p-1"
                           >
                             <FiStar
-                              className={`w-6 h-6 ${
+                              className={`w-5 h-5 sm:w-6 sm:h-6 ${
                                 star <= newReview.rating
                                   ? "text-yellow-400 fill-current"
                                   : "text-gray-300"
@@ -1026,8 +1038,8 @@ try {
                       </label>
                       <textarea
                         id="comment"
-                        rows="4"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                        rows="3"
+                        className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                         value={newReview.comment}
                         onChange={(e) =>
                           setNewReview({
@@ -1041,7 +1053,7 @@ try {
                       ></textarea>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div className="grid grid-cols-1 gap-4 mb-4">
                       <div>
                         <label
                           htmlFor="name"
@@ -1052,7 +1064,7 @@ try {
                         <input
                           type="text"
                           id="name"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                          className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                           value={newReview.name}
                           onChange={(e) =>
                             setNewReview({ ...newReview, name: e.target.value })
@@ -1072,7 +1084,7 @@ try {
                         <input
                           type="email"
                           id="email"
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                          className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
                           value={newReview.email}
                           onChange={(e) =>
                             setNewReview({
@@ -1089,7 +1101,7 @@ try {
                     <div className="flex justify-end">
                       <motion.button
                         type="submit"
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg flex items-center text-sm font-medium shadow-sm transition-all duration-200"
+                        className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-6 py-2 rounded-lg flex items-center justify-center text-sm font-medium shadow-sm transition-all duration-200"
                         whileHover={{ y: -2 }}
                         whileTap={{ scale: 0.98 }}
                         disabled={isSubmitting}
@@ -1128,47 +1140,48 @@ try {
               )}
             </AnimatePresence>
 
-            {/* Reviews List */}
-            {reviews.length > 0 ? (
-              <div className="space-y-6">
-                {reviews.map((review) => (
-                  <motion.div
-                    key={review.id}
-                    className="bg-white rounded-xl shadow-sm p-6 border border-gray-100"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <h4 className="font-medium text-gray-900">
-                          {review.name}
-                        </h4>
-                        <div className="flex items-center mt-1">
-                          <div className="flex mr-2">
-                            {renderStars(review.rating)}
-                          </div>
-                          <span className="text-xs text-gray-500">
-                            {review.createdAt}
-                          </span>
-                        </div>
-                      </div>
-                      {review.email && (
-                        <span className="text-xs text-gray-500">
-                          {review.email}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-gray-600 mt-3">{review.comment}</p>
-                  </motion.div>
-                ))}
+          {/* Reviews List */}
+{reviews.length > 0 ? (
+  <div className="space-y-4">
+    {reviews.map((review) => (
+      <motion.div
+        key={review.id}
+        className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-100"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
+          <div>
+            <h4 className="font-medium text-gray-900">
+              {review.name}
+            </h4>
+            <div className="flex flex-col sm:flex-row sm:items-center mt-1 gap-2">
+              <div className="flex">
+                {renderStars(review.rating)}
               </div>
-            ) : (
-              <div className="text-center py-8 text-gray-500 bg-white rounded-xl p-6 border border-gray-100">
-                No reviews yet. Be the first to review!
-              </div>
-            )}
+              <span className="text-xs text-gray-500">
+                {review.createdAt}
+              </span>
+            </div>
           </div>
+          {review.email && (
+            <span className="text-xs text-gray-500 break-all">
+              {review.email}
+            </span>
+          )}
+        </div>
+        <p className="text-gray-600 mt-3 text-sm sm:text-base">
+          {review.comment}
+        </p>
+      </motion.div>
+    ))}
+  </div>
+) : (
+  <div className="text-center py-6 text-gray-500 bg-white rounded-lg p-4 sm:p-6 border border-gray-100 text-sm sm:text-base">
+    No reviews yet. Be the first to review!
+  </div>
+)}</div>
         </motion.div>
       </div>
     </div>
