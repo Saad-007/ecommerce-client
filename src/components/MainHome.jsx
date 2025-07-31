@@ -230,107 +230,107 @@ const filteredProducts = products.filter((product) => {
     ) : (
       <> 
       {/* Hero Slider Section */}
-      <section className="relative h-[70vh] min-h-[500px] w-full overflow-hidden">
-        {slides.length > 0 ? (
-          <Slider {...settings} className="h-full">
-            {slides.map((slide, index) => (
-              <div key={slide._id || index} className="relative h-[70vh] min-h-[500px] w-full">
-                {/* Background Image with Overlay */}
-                <div className="absolute inset-0">
-                  <img
-                    src={slide.image}
-                    alt={slide.title}
-                    className="w-full h-full object-cover"
-                  />
-                  <div 
-                    className="absolute inset-0"
-                    style={{
-                      backgroundColor: slide.overlayColor,
-                      opacity: slide.overlayOpacity / 100
-                    }}
-                  ></div>
-                </div>
-
-                {/* Content */}
-                <div className={`container mx-auto px-4 h-full flex items-end pb-16 relative z-10 ${getTextAlignment(slide.textPosition)}`}>
-                  <motion.div
-                    initial={{ opacity: 0, y: 50 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className={`max-w-2xl ${getTextColor(slide.textColor)}`}
-                  >
-                    {slide.title && (
-                      <motion.h1
-                        className="text-5xl md:text-6xl lg:text-7xl font-bold mb-4 leading-tight"
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.4, duration: 0.8 }}
-                      >
-                        {slide.title}
-                      </motion.h1>
-                    )}
-                    
-                    {slide.subtitle && (
-                      <motion.p
-                        className="text-xl md:text-2xl mb-6 font-medium"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.6, duration: 0.6 }}
-                      >
-                        {slide.subtitle}
-                      </motion.p>
-                    )}
-                    
-                    {slide.ctaText && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.8, duration: 0.6 }}
-                      >
-                        <Link
-                          to={slide.ctaLink || "/shop"}
-                          className={`inline-flex items-center px-8 py-3.5 bg-white text-gray-900 font-medium hover:bg-gray-100 transition-all duration-300 group ${getButtonStyle(slide.buttonStyle)}`}
-                        >
-                          <span>{slide.ctaText}</span>
-                          <FiArrowRight className="ml-2 transition-transform duration-300 group-hover:translate-x-1" />
-                        </Link>
-                      </motion.div>
-                    )}
-                  </motion.div>
-                </div>
-              </div>
-            ))}
-          </Slider>
-        ) : (
-          <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
-            <div className="text-white text-center p-8">
-              <h2 className="text-3xl font-bold mb-4">No Slides Configured</h2>
-              <p className="mb-6">Please add slides in the admin panel</p>
-              {isAdmin && (
-                <Link
-                  to="/admin/hero"
-                  className="inline-flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <FiEdit3 className="mr-2" />
-                  Configure Hero Section
-                </Link>
-              )}
-            </div>
+     <section className="relative h-[60vh] sm:h-[70vh] min-h-[400px] sm:min-h-[500px] w-full overflow-hidden">
+  {slides.length > 0 ? (
+    <Slider {...settings} className="h-full">
+      {slides.map((slide, index) => (
+        <div key={slide._id || index} className="relative h-[60vh] sm:h-[70vh] min-h-[400px] sm:min-h-[500px] w-full">
+          {/* Background Image with Mobile-Optimized Crop */}
+          <div className="absolute inset-0">
+            <img
+              src={slide.image}
+              alt={slide.title}
+              className="w-full h-full object-cover object-center md:object-top"
+            />
+            <div 
+              className="absolute inset-0"
+              style={{
+                backgroundColor: slide.overlayColor,
+                opacity: slide.overlayOpacity / 100
+              }}
+            ></div>
           </div>
-        )}
 
-        {isAdmin && (
-          <div className="absolute top-4 right-4 z-30">
-            <button
-              onClick={() => setShowEditModal(true)}
-              className="p-2 bg-white/90 text-gray-800 rounded-full shadow-lg hover:bg-white transition-colors"
-              title="Edit Hero Section"
+          {/* Responsive Content */}
+          <div className={`container mx-auto px-4 h-full flex items-end pb-8 sm:pb-16 relative z-10 ${getTextAlignment(slide.textPosition)}`}>
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+              className={`max-w-2xl ${getTextColor(slide.textColor)}`}
             >
-              <FiEdit3 size={20} />
-            </button>
+              {slide.title && (
+                <motion.h1
+                  className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-2 sm:mb-4 leading-tight"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.8 }}
+                >
+                  {slide.title}
+                </motion.h1>
+              )}
+              
+              {slide.subtitle && (
+                <motion.p
+                  className="text-base sm:text-lg md:text-xl mb-4 sm:mb-6 font-medium"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6, duration: 0.6 }}
+                >
+                  {slide.subtitle}
+                </motion.p>
+              )}
+              
+              {slide.ctaText && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8, duration: 0.6 }}
+                >
+                  <Link
+                    to={slide.ctaLink || "/shop"}
+                    className={`inline-flex items-center px-6 sm:px-8 py-2.5 sm:py-3.5 bg-white text-gray-900 font-medium hover:bg-gray-100 transition-all duration-300 group ${getButtonStyle(slide.buttonStyle)}`}
+                  >
+                    <span className="text-sm sm:text-base">{slide.ctaText}</span>
+                    <FiArrowRight className="ml-1 sm:ml-2 transition-transform duration-300 group-hover:translate-x-1" />
+                  </Link>
+                </motion.div>
+              )}
+            </motion.div>
           </div>
+        </div>
+      ))}
+    </Slider>
+  ) : (
+    <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
+      <div className="text-white text-center p-6 sm:p-8">
+        <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">No Slides Configured</h2>
+        <p className="mb-4 sm:mb-6">Please add slides in the admin panel</p>
+        {isAdmin && (
+          <Link
+            to="/admin/hero"
+            className="inline-flex items-center px-4 sm:px-6 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm sm:text-base"
+          >
+            <FiEdit3 className="mr-1 sm:mr-2" />
+            Configure Hero Section
+          </Link>
         )}
-      </section>
+      </div>
+    </div>
+  )}
+
+  {isAdmin && (
+    <div className="absolute top-4 right-4 z-30">
+      <button
+        onClick={() => setShowEditModal(true)}
+        className="p-1.5 sm:p-2 bg-white/90 text-gray-800 rounded-full shadow-lg hover:bg-white transition-colors"
+        title="Edit Hero Section"
+      >
+        <FiEdit3 size={18} className="sm:w-5 sm:h-5" />
+      </button>
+    </div>
+  )}
+</section>
 {/* Ultimate Minimal Premium Features */}
 {/* Our Promise - Elevated Design */}
 <section className="py-28 bg-[#f8f8f8] relative overflow-hidden">
