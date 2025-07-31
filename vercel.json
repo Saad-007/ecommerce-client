@@ -6,7 +6,7 @@
       "use": "@vercel/static-build"
     }
   ],
-  "routes": [
+  "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "https://e-commerce-backend-production-36dc.up.railway.app/api/$1"
