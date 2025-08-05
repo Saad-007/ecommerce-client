@@ -76,12 +76,9 @@ export default function ProductDetail() {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const response = await fetch(
-          `${API_BASE_URL}/reviews?productId=${id}`,
-          {
-            credentials: "include", // if your backend requires auth cookies
-          }
-        );
+        const response = await fetch(`${API_BASE_URL}/reviews?productId=${id}`, {
+          credentials: "include",
+        });
         if (!response.ok) {
           throw new Error("Failed to fetch reviews");
         }
@@ -112,6 +109,7 @@ export default function ProductDetail() {
       fetchReviews();
     }
   }, [id]);
+
   const product = products?.find((p) => String(p.id) === id);
 
   if (!product) {
@@ -233,7 +231,7 @@ export default function ProductDetail() {
           name: newReview.name,
           email: newReview.email,
         }),
-        credentials: "include", // optional, only if your backend uses cookies
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -243,7 +241,6 @@ export default function ProductDetail() {
 
       const createdReview = await response.json();
 
-      // Add the new review to the existing reviews
       const updatedReviews = [
         {
           ...createdReview,
@@ -293,6 +290,7 @@ export default function ProductDetail() {
         />
       ));
   };
+
   return (
     <div className="bg-gradient-to-b from-gray-50 to-gray-100 min-h-screen">
       {/* Main Product Section */}
@@ -338,26 +336,25 @@ export default function ProductDetail() {
           </div>
 
           <div className="grid md:grid-cols-2 gap-12 p-8">
-            {/* Product Image Gallery */}
-            <div className="relative group">
-              {/* Main Image Container */}
-              <div className="relative bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl p-4 md:p-6 flex items-center justify-center min-h-[300px] md:min-h-[500px] overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
+            {/* Product Image Gallery - Improved Layout */}
+            <div className="relative">
+              {/* Main Image Container with Perfect Aspect Ratio */}
+              <div className="relative aspect-square bg-gradient-to-br from-gray-50 to-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
                 {images && images.length > 0 ? (
                   <>
-                    {/* Zoomable Image with Motion */}
+                    {/* Main Image with Smooth Transitions */}
                     <motion.div
+                      key={activeImageIndex}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       transition={{ duration: 0.4 }}
-                      className="w-full h-full flex items-center justify-center cursor-zoom-in"
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
+                      className="w-full h-full flex items-center justify-center"
                     >
                       <img
                         src={images[activeImageIndex]}
                         alt={name}
-                        className="w-full max-h-[300px] md:max-h-[500px] object-contain transition-opacity duration-500"
+                        className="w-full h-full object-contain transition-opacity duration-500"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src = "/default-product-image.jpg";
@@ -408,7 +405,7 @@ export default function ProductDetail() {
 
                 {/* Floating Tags */}
                 {tags.length > 0 && (
-                  <div className="absolute top-3 md:top-4 left-3 md:left-4 flex flex-wrap gap-1.5 md:gap-2 z-10">
+                  <div className="absolute top-4 left-4 flex flex-wrap gap-2 z-10">
                     {tags.map((tag) => (
                       <motion.span
                         key={tag}
@@ -426,7 +423,7 @@ export default function ProductDetail() {
                 {/* Discount Badge with Glow */}
                 {discount && (
                   <motion.div
-                    className="absolute top-3 md:top-4 right-3 md:right-4 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs md:text-sm px-3 py-1 rounded-full flex items-center shadow-lg z-10"
+                    className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-red-600 text-white text-sm px-3 py-1 rounded-full flex items-center shadow-lg z-10"
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: 0.2 }}
@@ -455,41 +452,34 @@ export default function ProductDetail() {
                 )}
               </div>
 
-              {/* Thumbnail Navigation - Responsive with Scroll Snap */}
-              {images && images.length > 0 && (
-                <div className="mt-4 md:mt-0 md:absolute md:left-0 md:top-0 md:h-full md:w-24 lg:w-28">
-                  <div className="flex md:flex-col gap-2.5 md:gap-3 w-full overflow-x-auto md:overflow-x-visible md:overflow-y-auto md:h-full pb-2 md:pb-0 md:py-3 md:pr-3 scroll-snap-x">
-                    {images.map((img, index) => (
-                      <motion.button
-                        key={index}
-                        onClick={() => setActiveImageIndex(index)}
-                        className={`flex-shrink-0 w-16 h-16 md:w-full md:h-20 lg:h-24 rounded-xl overflow-hidden cursor-pointer border-2 transition-all duration-300 ${
-                          activeImageIndex === index
-                            ? "border-blue-500 shadow-md scale-[1.02]"
-                            : "border-transparent hover:border-gray-300"
-                        }`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <img
-                          src={img}
-                          alt={`${name} thumbnail ${index + 1}`}
-                          className="w-full h-full object-cover hover:opacity-90 transition-opacity"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = "/default-thumbnail.jpg";
-                          }}
-                        />
-                      </motion.button>
-                    ))}
-                  </div>
+              {/* Thumbnail Navigation - Improved Layout */}
+              {images && images.length > 1 && (
+                <div className="mt-4 flex gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                  {images.map((img, index) => (
+                    <motion.button
+                      key={index}
+                      onClick={() => setActiveImageIndex(index)}
+                      className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden cursor-pointer border-2 transition-all duration-300 ${
+                        activeImageIndex === index
+                          ? "border-blue-500 shadow-md"
+                          : "border-transparent hover:border-gray-300"
+                      }`}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <img
+                        src={img}
+                        alt={`${name} thumbnail ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = "/default-thumbnail.jpg";
+                        }}
+                      />
+                    </motion.button>
+                  ))}
                 </div>
               )}
-
-              {/* Fullscreen Zoom Modal (would need separate state management) */}
-              <div className="hidden group-hover:block absolute bottom-4 left-1/2 -translate-x-1/2 bg-black/70 text-white text-xs px-3 py-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                Click to zoom
-              </div>
             </div>
 
             {/* Product Details */}
@@ -517,9 +507,7 @@ export default function ProductDetail() {
                     aria-label="Add to wishlist"
                   >
                     <FiHeart
-                      className={`w-5 h-5 ${
-                        isWishlisted ? "fill-current" : ""
-                      }`}
+                      className={`w-5 h-5 ${isWishlisted ? "fill-current" : ""}`}
                     />
                   </motion.button>
 
@@ -565,9 +553,7 @@ export default function ProductDetail() {
                 {(offerPrice || selectedVariant?.price) && (
                   <span className="text-xs font-medium bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full">
                     Save $
-                    {(price - (selectedVariant?.price || offerPrice)).toFixed(
-                      2
-                    )}
+                    {(price - (selectedVariant?.price || offerPrice)).toFixed(2)}
                   </span>
                 )}
               </motion.div>
@@ -591,7 +577,7 @@ export default function ProductDetail() {
                           <motion.button
                             key={color.value}
                             onClick={() => setSelectedColor(color.value)}
-                            className={`p-3.5 rounded-full border-2 transition-all duration-200 ${
+                            className={`w-10 h-10 rounded-full border-2 transition-all duration-200 flex items-center justify-center ${
                               selectedColor === color.value
                                 ? "border-blue-500 shadow-md"
                                 : "border-transparent hover:border-gray-300"
@@ -896,6 +882,7 @@ export default function ProductDetail() {
               </div>
             </div>
           </div>
+
           {/* You May Also Like Section */}
           <div className="border-t border-gray-200 px-4 sm:px-8 py-12 bg-gray-50/80">
             <div className="max-w-7xl mx-auto">
@@ -903,7 +890,7 @@ export default function ProductDetail() {
                 You May Also Like
               </h2>
 
-              {/* Mobile Carousel - 2-3 products per row */}
+              {/* Mobile Carousel */}
               <div className="lg:hidden relative overflow-x-auto pb-4 -mx-4 px-4 snap-x snap-mandatory hide-scrollbar">
                 <div className="flex space-x-4 w-max">
                   {products
@@ -911,11 +898,11 @@ export default function ProductDetail() {
                       (p) =>
                         p.category === product.category && p.id !== product.id
                     )
-                    .slice(0, 6) // Show max 6 related products
+                    .slice(0, 6)
                     .map((relatedProduct) => (
                       <div
                         key={relatedProduct.id}
-                        className="w-[calc(50vw-1.5rem)] sm:w-[calc(33.3vw-1.5rem)] flex-shrink-0 snap-start" // 2 on mobile, 3 on sm
+                        className="w-[calc(50vw-1.5rem)] sm:w-[calc(33.3vw-1.5rem)] flex-shrink-0 snap-start"
                       >
                         <motion.div
                           whileHover={{ y: -5 }}
@@ -932,7 +919,7 @@ export default function ProductDetail() {
                 </div>
               </div>
 
-              {/* Desktop Grid - 4 products per row */}
+              {/* Desktop Grid */}
               <div className="hidden lg:grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                 {products
                   .filter(
@@ -954,7 +941,6 @@ export default function ProductDetail() {
                   ))}
               </div>
 
-              {/* Fallback if no related products */}
               {products.filter(
                 (p) => p.category === product.category && p.id !== product.id
               ).length === 0 && (
@@ -964,7 +950,8 @@ export default function ProductDetail() {
               )}
             </div>
           </div>
-          {/* Reviews Section Container */}
+
+          {/* Reviews Section */}
           <div className="border-t border-gray-200 px-4 sm:px-6 py-6 bg-gray-50/80">
             <div className="flex flex-col justify-between items-start mb-6">
               <div className="w-full">
@@ -990,6 +977,7 @@ export default function ProductDetail() {
                 {showReviewForm ? "Cancel Review" : "Write a Review"}
               </motion.button>
             </div>
+
             {/* Review Form */}
             <AnimatePresence>
               {showReviewForm && (
@@ -1140,48 +1128,49 @@ export default function ProductDetail() {
               )}
             </AnimatePresence>
 
-          {/* Reviews List */}
-{reviews.length > 0 ? (
-  <div className="space-y-4">
-    {reviews.map((review) => (
-      <motion.div
-        key={review.id}
-        className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-100"
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
-          <div>
-            <h4 className="font-medium text-gray-900">
-              {review.name}
-            </h4>
-            <div className="flex flex-col sm:flex-row sm:items-center mt-1 gap-2">
-              <div className="flex">
-                {renderStars(review.rating)}
+            {/* Reviews List */}
+            {reviews.length > 0 ? (
+              <div className="space-y-4">
+                {reviews.map((review) => (
+                  <motion.div
+                    key={review.id}
+                    className="bg-white rounded-lg shadow-sm p-4 sm:p-6 border border-gray-100"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-3">
+                      <div>
+                        <h4 className="font-medium text-gray-900">
+                          {review.name}
+                        </h4>
+                        <div className="flex flex-col sm:flex-row sm:items-center mt-1 gap-2">
+                          <div className="flex">
+                            {renderStars(review.rating)}
+                          </div>
+                          <span className="text-xs text-gray-500">
+                            {review.createdAt}
+                          </span>
+                        </div>
+                      </div>
+                      {review.email && (
+                        <span className="text-xs text-gray-500 break-all">
+                          {review.email}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-gray-600 mt-3 text-sm sm:text-base">
+                      {review.comment}
+                    </p>
+                  </motion.div>
+                ))}
               </div>
-              <span className="text-xs text-gray-500">
-                {review.createdAt}
-              </span>
-            </div>
+            ) : (
+              <div className="text-center py-6 text-gray-500 bg-white rounded-lg p-4 sm:p-6 border border-gray-100 text-sm sm:text-base">
+                No reviews yet. Be the first to review!
+              </div>
+            )}
           </div>
-          {review.email && (
-            <span className="text-xs text-gray-500 break-all">
-              {review.email}
-            </span>
-          )}
-        </div>
-        <p className="text-gray-600 mt-3 text-sm sm:text-base">
-          {review.comment}
-        </p>
-      </motion.div>
-    ))}
-  </div>
-) : (
-  <div className="text-center py-6 text-gray-500 bg-white rounded-lg p-4 sm:p-6 border border-gray-100 text-sm sm:text-base">
-    No reviews yet. Be the first to review!
-  </div>
-)}</div>
         </motion.div>
       </div>
     </div>
