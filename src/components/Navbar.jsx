@@ -162,7 +162,7 @@ const Navbar = () => {
 
   return (
     <nav
-      className={`bg-white sticky top-0 z-50 border-b border-gray-100 transition-all duration-300 ${
+      className={`bg-white top-0 z-50 border-b border-gray-100 transition-all duration-300 ${
         scrolled ? "shadow-sm" : ""
       }`}
     >
