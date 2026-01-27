@@ -90,31 +90,31 @@ export const ProductProvider = ({ children }) => {
     }
   };
 
-const fetchProducts = async () => {
+  const fetchProducts = async () => {
     try {
       setLoading(true);
+      const res = await fetch(`${API_BASE_URL}/products`, {
+        credentials: "include",
+      });
 
-      // ⚡ SPEED UPGRADE: Parallel Requests
-      // We fetch featured products specifically for the Hero section first
-      const [allRes, featuredRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/products`, { credentials: "include" }),
-        fetch(`${API_BASE_URL}/products?featured=true&limit=5`, { credentials: "include" })
-      ]);
+      if (!res.ok) throw new Error("Failed to fetch products");
 
-      const allData = await allRes.json();
-      const featuredData = await featuredRes.json();
+      const data = await res.json();
+      const productList = data.products || data || [];
+      const normalized = productList.map(normalizeProduct);
 
-      const normalizedAll = (allData.products || allData || []).map(normalizeProduct);
-      const normalizedFeatured = (featuredData.products || featuredData || []).map(normalizeProduct);
+      setProducts(normalized);
+      setFeaturedProducts(normalized.filter((p) => p.featured === true));
 
-      setProducts(normalizedAll);
-      setFeaturedProducts(normalizedFeatured);
-
-      // Cache the full list
-      storeProductsInCache(normalizedAll);
+      storeProductsInCache(normalized);
     } catch (error) {
       console.error("Error fetching products:", error);
-      // Fallback to cache logic...
+
+      const cached = getProductsFromCache();
+      if (cached) {
+        setProducts(cached);
+        setFeaturedProducts(cached.filter((p) => p.featured === true));
+      }
     } finally {
       setLoading(false);
     }
