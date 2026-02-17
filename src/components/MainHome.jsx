@@ -5,7 +5,7 @@ import { Navigation } from 'swiper/modules';
 import { useAuth } from "../context/AuthContext";
 import 'swiper/css';
 import { useSearch } from "../context/SearchContext";
-
+import { FiPackage } from "react-icons/fi";
 import 'swiper/css/navigation';
 import { 
   FiShoppingBag, 

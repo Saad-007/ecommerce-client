@@ -22,14 +22,15 @@ export const ProductProvider = ({ children }) => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const normalizeProduct = (product) => ({
-    ...product,
-    _id: product._id || product.id,
-    featured: Boolean(product.featured),
-    salesCount: Number(product.salesCount) || 0,
-    price: Number(product.price) || 0,
-    offerPrice: product.offerPrice ? Number(product.offerPrice) : null,
-  });
+const normalizeProduct = (product) => ({
+  ...product,
+  // ⚡ FIX: Map _id to id manually since .lean() skips the schema transform
+  id: product._id || product.id, 
+  _id: product._id || product.id,
+  image: product.image || "/placeholder-image.png", // Fallback if image is null
+  featured: Boolean(product.featured),
+  price: Number(product.price) || 0,
+});
 
   const storeProductsInCache = (products) => {
     try {
@@ -91,34 +92,39 @@ export const ProductProvider = ({ children }) => {
   };
 
   const fetchProducts = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/products`, {
-        credentials: "include",
-      });
+  try {
+    setLoading(true);
+    const res = await fetch(`${API_BASE_URL}/products`, {
+      credentials: "include",
+    });
 
-      if (!res.ok) throw new Error("Failed to fetch products");
+    // If server returns 500, this catch block will trigger
+    if (!res.ok) throw new Error(`Server error: ${res.status}`);
 
-      const data = await res.json();
-      const productList = data.products || data || [];
-      const normalized = productList.map(normalizeProduct);
+    const data = await res.json();
+    
+    // Ensure we handle both {products: []} and direct array formats
+    const productList = data.products || (Array.isArray(data) ? data : []);
+    const normalized = productList.map(normalizeProduct);
 
+    setProducts(normalized);
+    setFeaturedProducts(normalized.filter((p) => p.featured === true));
+    storeProductsInCache(normalized);
+
+  } catch (error) {
+    console.error("Error fetching products:", error);
+    
+    // ⚡ Recovery: If server fails, try to load from cache again
+    const cached = getProductsFromCache();
+    if (cached) {
+      const normalized = cached.map(normalizeProduct);
       setProducts(normalized);
       setFeaturedProducts(normalized.filter((p) => p.featured === true));
-
-      storeProductsInCache(normalized);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-
-      const cached = getProductsFromCache();
-      if (cached) {
-        setProducts(cached);
-        setFeaturedProducts(cached.filter((p) => p.featured === true));
-      }
-    } finally {
-      setLoading(false);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   const addProduct = async (product) => {
     try {
